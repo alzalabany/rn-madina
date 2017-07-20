@@ -1,7 +1,7 @@
 import { AsyncStorage } from 'react-native';
-import {  } from 'react-redux';
+import { Navigation } from 'react-native-navigation';
 
-import { compose, Provider, applyMiddleware, createStore } from 'redux';
+import { compose, applyMiddleware, createStore } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import thunk from 'redux-thunk';
 //import { persistStore, autoRehydrate } from 'redux-persist'
@@ -10,6 +10,7 @@ import * as storage from 'redux-storage'
 import merger from 'redux-storage-merger-immutablejs';
 import createEngine from 'redux-storage-engine-reactnativeasyncstorage';
 import filter from 'redux-storage-decorator-filter'
+import { Provider } from 'react-redux';
 
 import registerScreens from './registerScreens';
 import rootReducer from './rootReducer';
@@ -34,8 +35,12 @@ const navigatorButtons = {
 const passProps = {
   logout    : () => store.dispatch(appActions.appReset()),
 }
+const noob = ()=>({});
+const mockAction = {type:'@@ERROR_NO_ACTION'};
 
-function appTabs(iconsMap, navigatorStyle){
+let store = {dispatch: noob, subscribe: noob, getState: noob, replaceReducer: noob};
+
+function makeAppTabs(iconsMap, navigatorStyle){
   return [
         {
           label: 'News',
@@ -48,68 +53,79 @@ function appTabs(iconsMap, navigatorStyle){
           navigatorStyle,
           navigatorButtons
         },
-        {
-          label: 'Home',
-          screen: 'ivf.HomeScreen',
-          icon: iconsMap["ios-calendar-outline"],
-          selectedIcon: iconsMap["ios-calendar"],
-          //selectedIcon: require('../img/two_selected.png'), // iOS only
-          title: 'Home',
-          passProps,
-          navigatorStyle,
-          navigatorButtons
-        },
-        {
-          label: 'About',
-          screen: 'ivf.MoreScreen',
-          icon: iconsMap["ios-more-outline"],
-          selectedIcon: iconsMap["ios-more"],
-          //selectedIcon: require('../img/two_selected.png'), // iOS only
-          title: 'Madina Women Hospital',
-          passProps,
-          navigatorStyle,
-          navigatorButtons
-        },
+        // {
+        //   label: 'Home',
+        //   screen: 'ivf.HomeScreen',
+        //   icon: iconsMap["ios-calendar-outline"],
+        //   selectedIcon: iconsMap["ios-calendar"],
+        //   //selectedIcon: require('../img/two_selected.png'), // iOS only
+        //   title: 'Home',
+        //   passProps,
+        //   navigatorStyle,
+        //   navigatorButtons
+        // },
+        // {
+        //   label: 'About',
+        //   screen: 'ivf.MoreScreen',
+        //   icon: iconsMap["ios-more-outline"],
+        //   selectedIcon: iconsMap["ios-more"],
+        //   //selectedIcon: require('../img/two_selected.png'), // iOS only
+        //   title: 'Madina Women Hospital',
+        //   passProps,
+        //   navigatorStyle,
+        //   navigatorButtons
+        // },
 
   ]
 }
-
-registerScreens(store, Provider);
+const smartRootReducer = (state, action=mockAction)=>{
+    return rootReducer(state, action, store.getState());
+}
 const isProduction = false;
-const engine            = createEngine('ivfKey10');
+const engine            = createEngine('ivfKey101');
 const loadStore         = storage.createLoader(engine);
 const storageMiddleware = storage.createMiddleware(engine);
-const reducer           = storage.reducer(rootReducer, merger);
+const reducer           = storage.reducer(smartRootReducer, merger);
 const middleWares       = applyMiddleware( storageMiddleware, thunk );
 const makeStore         = isProduction ?  compose( middleWares )  :
                                           composeWithDevTools( middleWares);
-const store = makeStore(createStore)( reducer );
+store = makeStore(createStore)( reducer );
+
+registerScreens(store, Provider);
 
 export default class App {
   constructor(appStyle) {
     // since react-redux only works on components, we need to subscribe this class manually
     this.currentRoot = null;
     this.action = type => store.dispatch({type});
-    this.tabs = appTabs({}, appStyle);
+    this.tabs = makeAppTabs({}, appStyle);
     this.startApp = this.startApp.bind(this)
     this.onStoreUpdate = this.onStoreUpdate.bind(this)
-    store.subscribe(this.onStoreUpdate);
 
-    timeout = setTimeout(function() {
+    timeout = setTimeout(() => {
       console.log('loading icons and store took too long, i will intialize anyway')
+      store.subscribe(this.onStoreUpdate);
       store.dispatch(appActions.appInitialized())
     }, 2000);
+
+    // @@todo load all images in assets folder too !;
+
     LoadIcons.then(icons => {
         navigatorButtons.leftButtons[0].icon = icons['ios-person'];
-        this.tabs = appTabs(icons, appStyle);
+        // store.dispatch(appActions.appInitialized())
+        this.tabs = makeAppTabs(icons, appStyle);
         loadStore(store).finally(() => {
           clearTimeout(timeout);
+          store.subscribe(this.onStoreUpdate);
           store.dispatch(appActions.appInitialized())
         });
       })
   }
   onStoreUpdate(){
-    const root = appSelectors.selectAppRoot(this.store.getState());
+    const state = store.getState();
+    const root = appSelectors.selectAppRoot(state);
+    console.log('store updated',root, this.currentRoot, state);
+
     if(!root){
       this.currentRoot = 'login';
       this.startApp(this.currentRoot);
@@ -123,8 +139,9 @@ export default class App {
 
   }
   startApp(root) {
-    switch (root) {
-      case 'login':
+    console.log('starting app', root, root === 'login')
+    if(root === 'login'){
+        console.log('case login matched');
         Navigation.startSingleScreenApp({
              screen: {
                screen: 'ivf.AuthScreen',
@@ -134,7 +151,9 @@ export default class App {
              passProps
             });
         return;
-      case 'after-login':
+    }
+    if(root === 'after-login'){
+        console.log('case after login matched')
         Navigation.startTabBasedApp({
           animationType: 'slide-down',
           title: 'Madina Icsi',
@@ -147,9 +166,8 @@ export default class App {
           tabs: this.tabs,
         });
         return;
-      default:
-        console.warn('unkown app root');
-        break;
     }
+      
+    console.warn('unkown app root');
   }
 }
