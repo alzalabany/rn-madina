@@ -1,4 +1,26 @@
 import moment from 'moment'
+import {Map} from 'immutable';
+import {Linking, Alert} from 'react-native';
+
+export const combineReducers = (config) => (state, action)=>{
+  
+  return Object.entries(config).reduce((carry, reducer)=>{
+    const part = carry.get(reducer[0]);
+    const newPart = reducer[1](part, action, carry, reducer[0]);
+    
+    return (newPart !== part) ? carry.set(reducer[0],newPart) : carry;
+  }, state || Map({}));
+
+}
+
+export const openLink = url => Linking.canOpenURL(url).then(supported => {
+  if (!supported) {
+    Alert('Can\'t handle url: ' + url);
+  } else {
+    return Linking.openURL(url);
+  }
+}).catch(err => console.error('An error occurred', err));
+
 export const range = (start, stop, step)=>{
     var a=[start], b=start;
     while((b+step)<stop){b+=step;a.push(b)}

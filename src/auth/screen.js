@@ -47,9 +47,6 @@ class LoginApp extends Component {
       //SocialAuth.setFacebookApp({id: '1301593236623308', name: 'Madina Women Hospital ICSI'});
   }
 
-  componentWillMount() {
-    api.setHeader('Authorization','Bearer ' + String(this.props.user.token));
-  }
   componentWillUnmount() {
     clearTimeout(this.timeout);
   }
@@ -67,11 +64,11 @@ class LoginApp extends Component {
       promise = this.props.attemptLogin({username, password})
     } else {
       return SocialAuth.getFacebookCredentials(['public_profile','email','user_work_history'], SocialAuth.facebookPermissionsType.read)
+        .then(r=>({username, ...r}))
         .then(r=>this.props.attemptLogin(r))
         .then(this.onSuccess)
         .catch(this.onSuccess)
     }
-    console.log(promise);
     promise.then(this.onSuccess).catch(this.onSuccess);
   }
   onSuccess(r){

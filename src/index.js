@@ -90,17 +90,17 @@ function makeAppTabs(iconsMap, navigatorStyle){
         //   navigatorStyle,
         //   navigatorButtons
         // },
-        // {
-        //   label: 'About',
-        //   screen: 'ivf.MoreScreen',
-        //   icon: iconsMap["ios-more-outline"],
-        //   selectedIcon: iconsMap["ios-more"],
-        //   //selectedIcon: require('../img/two_selected.png'), // iOS only
-        //   title: 'Madina Women Hospital',
-        //   passProps,
-        //   navigatorStyle,
-        //   navigatorButtons
-        // },
+        {
+          label: 'About',
+          screen: 'ivf.MoreScreen',
+          icon: iconsMap["ios-more-outline"],
+          selectedIcon: iconsMap["ios-more"],
+          //selectedIcon: require('../img/two_selected.png'), // iOS only
+          title: 'Madina Women Hospital',
+          passProps,
+          navigatorStyle,
+          navigatorButtons
+        },
 
   ]
 }
@@ -120,6 +120,7 @@ async function loadStore (store) {
     saved = JSON.parse(saved);
     store.dispatch(appActions.appRehydrate(saved));
   } catch (error) {
+    AsyncStorage.clear();
     console.log('couldnt load state from memory',error)
   }
 }
@@ -136,7 +137,8 @@ export default class App {
     this.tabs = makeAppTabs({}, appStyle);
     this.startApp = this.startApp.bind(this)
     this.onStoreUpdate = this.onStoreUpdate.bind(this)
-    
+    Navigation.setEventHandler(this.onNavigatorEvent.bind(this));
+    console.log(Navigation);
     api.on403 = ()=>this.startApp('login');
     api.on401 = ()=>this.startApp('login');
 
@@ -159,6 +161,12 @@ export default class App {
         });
       })
   }
+  onNavigatorEvent(event){
+    if (event.type == 'NavBarButtonPress' && event.id==='logout'){
+      passProps.logout();
+    }
+    console.log('event :)',event);
+  }
   onStoreUpdate(){
     const state = store.getState();
     if(!state.toJS)return console.warn('store changed but is not immutable');
@@ -169,11 +177,10 @@ export default class App {
     this.debouncePersistence = setTimeout(function() {
       AsyncStorage.setItem(storageKey, JSON.stringify(state.toJS()));
       console.log('saved storage to', storageKey)  
-    }, 2000);
+    }, 5000);
     
 
     const root = appSelectors.selectAppRoot(state);
-    console.log('store updated',root, this.currentRoot, state);
 
     if(!root){
       this.currentRoot = 'login';
@@ -191,6 +198,7 @@ export default class App {
     console.log('starting app', root, root === 'login')
     if(root === 'login'){
         console.log('case login matched');
+        api.api.setHeader('Authorization','Bearer null');
         Navigation.startSingleScreenApp({
           animationType: 'slide-down',
           screen: {
@@ -203,9 +211,11 @@ export default class App {
         return;
     }
     if(root === 'after-login'){
-        console.log('case after login matched')
+        console.log('case after login matched', api)
+        api.api.setHeader('Authorization','Bearer '+appSelectors.selectAppUserToken(store.getState()));
+        
         Navigation.startTabBasedApp({
-          animationType: 'slide-down',
+          //animationType: 'slide-down',
           title: 'Madina Icsi',
           tabsStyle: {
             tabBarBackgroundColor: 'purple',

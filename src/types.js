@@ -1,3 +1,4 @@
+import {types as BLOG} from './Blog/ducks';
 /**
  * to generate boilerplate just copy types to sublime and 
  * search: export const ([A-Z]+)_([A-Z])([A-Z]+)? = '([^']+)';
@@ -29,3 +30,5 @@ export const AUTH_LOGIN = '/root/auth/login/';
 export const USERS_ADD = '/root/users/addone/';
 export const USERS_MERGE = '/root/users/addmany/';
 export const USERS_SET = '/root/users/reset/';
+
+export const {...params} = BLOG;
