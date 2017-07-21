@@ -3,7 +3,7 @@ import { Navigation } from 'react-native-navigation';
 
 import { compose, applyMiddleware, createStore } from 'redux';
 import { Provider } from 'react-redux';
-import { composeWithDevTools } from 'redux-devtools-extension';
+import { composeWithDevTools } from 'redux-devtools-extension'; // eslint-disable-line
 import thunk from 'redux-thunk';
 
 import registerScreens from './registerScreens';
@@ -11,39 +11,7 @@ import rootReducer from './rootReducer';
 import LoadIcons from './icons';
 import * as appActions from './actions';
 import * as appSelectors from './selectors';
-import api,{apiMiddleware} from './api';
-
-
-////////////////////
-////////////////////
-////////START DEBUG CODE ONLY.. REMOVE IN PRODUCTION
-////////////////////
-////////////////////
-if (__DEV__) {  
-  var mapping = {
-      debug: 'teal',
-      info: 'blue',
-  };
-  
-  ["debug","info"].forEach(function(method) {
-      var oldMethod = console[method] ? console[method].bind(console) : console.log.bind(console);
-      console[method] = function() {
-          oldMethod('%c===========================================', 'color: '+(mapping[method])+'; display: block;');
-          const arr = Array.from(arguments);
-          arr.map(m=>{
-            let msg = (['string','boolean'].indexOf(m)>-1 || !m) ? String(m) : JSON.stringify(m, undefined, 2);
-            if(arr.length > 1)oldMethod('%c------------------------------------','color: '+(mapping[method])+'; display: block;');
-            oldMethod('%c'+msg, 'color: '+(mapping[method])+'; display: block;font-szie:22px');
-          });
-          oldMethod('%c===========================================', 'color: '+(mapping[method])+'; display: block;');
-      }    
-  });
-}
-////////////////////
-////////////////////
-////////END DEBUG
-////////////////////
-////////////////////
+import HTTP, {api, apiMiddleware} from './api';
 
 const navigatorButtons = {
   leftButtons: [
@@ -139,8 +107,8 @@ export default class App {
     this.onStoreUpdate = this.onStoreUpdate.bind(this)
     Navigation.setEventHandler(this.onNavigatorEvent.bind(this));
     console.log(Navigation);
-    api.on403 = ()=>this.startApp('login');
-    api.on401 = ()=>this.startApp('login');
+    HTTP.on403 = ()=>this.startApp('login');
+    HTTP.on401 = ()=>this.startApp('login');
 
     timeout = setTimeout(() => {
       console.log('loading icons and store took too long, i will intialize anyway')
@@ -198,7 +166,7 @@ export default class App {
     console.log('starting app', root, root === 'login')
     if(root === 'login'){
         console.log('case login matched');
-        api.api.setHeader('Authorization','Bearer null');
+        api.setHeader('Authorization','Bearer null');
         Navigation.startSingleScreenApp({
           animationType: 'slide-down',
           screen: {
@@ -212,7 +180,7 @@ export default class App {
     }
     if(root === 'after-login'){
         console.log('case after login matched', api)
-        api.api.setHeader('Authorization','Bearer '+appSelectors.selectAppUserToken(store.getState()));
+        api.setHeader('Authorization','Bearer '+appSelectors.selectAppUserToken(store.getState()));
         
         Navigation.startTabBasedApp({
           //animationType: 'slide-down',
