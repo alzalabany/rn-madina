@@ -2,22 +2,48 @@ import { AsyncStorage } from 'react-native';
 import { Navigation } from 'react-native-navigation';
 
 import { compose, applyMiddleware, createStore } from 'redux';
+import { Provider } from 'react-redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import thunk from 'redux-thunk';
-//import { persistStore, autoRehydrate } from 'redux-persist'
-//import { persistStore, autoRehydrate } from 'redux-persist-immutable'
-import * as storage from 'redux-storage'
-import merger from 'redux-storage-merger-immutablejs';
-import createEngine from 'redux-storage-engine-reactnativeasyncstorage';
-import filter from 'redux-storage-decorator-filter'
-import { Provider } from 'react-redux';
 
 import registerScreens from './registerScreens';
 import rootReducer from './rootReducer';
 import LoadIcons from './icons';
 import * as appActions from './actions';
 import * as appSelectors from './selectors';
+import api,{apiMiddleware} from './api';
 
+
+////////////////////
+////////////////////
+////////START DEBUG CODE ONLY.. REMOVE IN PRODUCTION
+////////////////////
+////////////////////
+if (__DEV__) {  
+  var mapping = {
+      debug: 'teal',
+      info: 'blue',
+  };
+  
+  ["debug","info"].forEach(function(method) {
+      var oldMethod = console[method] ? console[method].bind(console) : console.log.bind(console);
+      console[method] = function() {
+          oldMethod('%c===========================================', 'color: '+(mapping[method])+'; display: block;');
+          const arr = Array.from(arguments);
+          arr.map(m=>{
+            let msg = (['string','boolean'].indexOf(m)>-1 || !m) ? String(m) : JSON.stringify(m, undefined, 2);
+            if(arr.length > 1)oldMethod('%c------------------------------------','color: '+(mapping[method])+'; display: block;');
+            oldMethod('%c'+msg, 'color: '+(mapping[method])+'; display: block;font-szie:22px');
+          });
+          oldMethod('%c===========================================', 'color: '+(mapping[method])+'; display: block;');
+      }    
+  });
+}
+////////////////////
+////////////////////
+////////END DEBUG
+////////////////////
+////////////////////
 
 const navigatorButtons = {
   leftButtons: [
@@ -33,7 +59,7 @@ const navigatorButtons = {
   ],
 };
 const passProps = {
-  logout    : () => store.dispatch(appActions.appReset()),
+  logout    : () => store.dispatch(appActions.authLogout(appSelectors.selectAppUserId(store.getState()))),
 }
 const noob = ()=>({});
 const mockAction = {type:'@@ERROR_NO_ACTION'};
@@ -81,15 +107,23 @@ function makeAppTabs(iconsMap, navigatorStyle){
 const smartRootReducer = (state, action=mockAction)=>{
     return rootReducer(state, action, store.getState());
 }
-const isProduction = false;
-const engine            = createEngine('ivfKey101');
-const loadStore         = storage.createLoader(engine);
-const storageMiddleware = storage.createMiddleware(engine);
-const reducer           = storage.reducer(smartRootReducer, merger);
-const middleWares       = applyMiddleware( storageMiddleware, thunk );
-const makeStore         = isProduction ?  compose( middleWares )  :
-                                          composeWithDevTools( middleWares);
-store = makeStore(createStore)( reducer );
+
+const middleWares = applyMiddleware( thunk, apiMiddleware );
+const composed = __DEV__ ? composeWithDevTools(middleWares) : compose(middleWares);
+
+store = createStore(smartRootReducer, undefined, composed)
+const storageKey = '@MySuperStore:key';
+
+async function loadStore (store) {
+  let saved = await AsyncStorage.getItem(storageKey);
+  try {
+    saved = JSON.parse(saved);
+    store.dispatch(appActions.appRehydrate(saved));
+  } catch (error) {
+    console.log('couldnt load state from memory',error)
+  }
+}
+
 
 registerScreens(store, Provider);
 
@@ -97,10 +131,14 @@ export default class App {
   constructor(appStyle) {
     // since react-redux only works on components, we need to subscribe this class manually
     this.currentRoot = null;
+    this.debouncePersistence = 0;
     this.action = type => store.dispatch({type});
     this.tabs = makeAppTabs({}, appStyle);
     this.startApp = this.startApp.bind(this)
     this.onStoreUpdate = this.onStoreUpdate.bind(this)
+    
+    api.on403 = ()=>this.startApp('login');
+    api.on401 = ()=>this.startApp('login');
 
     timeout = setTimeout(() => {
       console.log('loading icons and store took too long, i will intialize anyway')
@@ -123,6 +161,17 @@ export default class App {
   }
   onStoreUpdate(){
     const state = store.getState();
+    if(!state.toJS)return console.warn('store changed but is not immutable');
+    
+    // persist store;
+    this.state = state;
+    clearTimeout(this.debouncePersistence);
+    this.debouncePersistence = setTimeout(function() {
+      AsyncStorage.setItem(storageKey, JSON.stringify(state.toJS()));
+      console.log('saved storage to', storageKey)  
+    }, 2000);
+    
+
     const root = appSelectors.selectAppRoot(state);
     console.log('store updated',root, this.currentRoot, state);
 
@@ -143,13 +192,14 @@ export default class App {
     if(root === 'login'){
         console.log('case login matched');
         Navigation.startSingleScreenApp({
-             screen: {
-               screen: 'ivf.AuthScreen',
-               title: 'Login',
-               navigatorStyle:{ navBarHidden: true },
-             },
-             passProps
-            });
+          animationType: 'slide-down',
+          screen: {
+            screen: 'ivf.AuthScreen',
+            title: 'Login',
+            navigatorStyle:{ navBarHidden: true },
+          },
+          passProps
+        });
         return;
     }
     if(root === 'after-login'){

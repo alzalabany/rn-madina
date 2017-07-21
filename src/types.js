@@ -12,9 +12,16 @@
       return state; //run your manipilation here
     }
  */
+export const API_START = '/app/API/START/';
+export const API_SUCCESS = '/app/API/SUCCESS/';
+export const API_FAILED = '/app/API/FAILED/';
+export const API_ACCESS_DENIED = '/app/API/ACCESS/DENIED/';
+export const API_CALL_ACTION = '/app/API/CALL/';
 
 export const APP_START = '/root/app/start/';
 export const APP_RESET = '/root/app/reset/';
+export const APP_LOAD = '/root/app/rehydrate/';
+export const APP_SET_USER = '/root/app/login/';
 
 export const AUTH_LOGOUT = '/root/auth/logout/';
 export const AUTH_LOGIN = '/root/auth/login/';

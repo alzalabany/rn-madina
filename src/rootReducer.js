@@ -2,37 +2,41 @@ import { Map } from 'immutable';
 import * as types from './types';
 
 import UserReducer from './users/reducer';
-
-const initialState = Map({
-  app: Map({
-    root: 'after-login',
-    user_id: 0
-  }),
-})
+import appReducer from './appReducer';
+import {selectAppUserToken} from './selectors';
 
 const reducers = {
-  User: UserReducer,
+  [UserReducer.key]: UserReducer.reducer,
+  [appReducer.key]: appReducer.reducer,
 }
+
+const initialState = Object.entries(reducers).reduce((carry, reducer)=>carry.set(reducer[0],reducer[1](undefined,{})),Map({}))
+console.log('initial state', initialState.toJS());
 
 const reducerGlobalStateIf = {};
 
 reducerGlobalStateIf[types.APP_RESET] = () => initialState;
-reducerGlobalStateIf[types.APP_START] = (state) => Boolean( state.getIn(['app','user_id']) ) ? state.setIn( ['app','root'], 'after-login' ) : initialState.setIn( ['app','root'], 'login' );
+reducerGlobalStateIf[types.APP_START] = (state) => selectAppUserToken(state) ? state.setIn( ['app','root'], 'after-login' ) : state.setIn( ['app','root'], 'login' );
 
 const rootReducer = (state=initialState, action, storeState) => {
-  console.log('action: '+action.type);
-  
-  if( reducerGlobalStateIf[action.type] ){
-    return reducerGlobalStateIf[action.type](state)
-  }
+  console.log('action: '+action.type, action);
 
   // combine all reducers.
-  return Object.entries(reducers).reduce((carry, reducer)=>{
+  state = Object.entries(reducers).reduce((carry, reducer)=>{
     const part = carry.get(reducer[0]);
     const newPart = reducer[1](part, action, storeState);
-    console.log(reducer[0] + ' changed the state');
-    return newPart !== part ? carry.set(reducer[0],newPart) : carry;
+    
+    if(newPart !== part){
+      console.log(reducer[0] + ' changed the state', newPart.toJS());
+      return carry.set(reducer[0],newPart)
+    }
+    
+    return carry;
   }, state);
+
+  console.log('current user', selectAppUserToken(state));
+  return ( reducerGlobalStateIf[action.type] ) ? reducerGlobalStateIf[action.type](state, action):state;
+  
 }
 
 export default rootReducer;

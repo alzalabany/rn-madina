@@ -1,4 +1,7 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
+
 import {
   KeyboardAvoidingView,
   Text,
@@ -20,11 +23,12 @@ import logo from '../../assets/images/logo.png';
 import user from '../../assets/images/userIcon.png';
 import pass from '../../assets/images/passwordIcon.png';
 import lgnbtn from '../../assets/images/btnBg.png';
-import {api} from '../api';
-import {LOGIN, loginSuccess} from '../common/actions';
-import T from '../common/types';
-import {connect} from 'react-redux';
 
+import {bindActionsToDispatch} from '../tools';
+import * as selectors from '../selectors';
+import * as actions from '../actions';
+import {UserShape} from '../users/reducer';
+import {api} from '../api';
 const {width,height} = Dimensions.get('window');
 
 
@@ -35,44 +39,54 @@ class LoginApp extends Component {
       this.state = {
         error:[],
         moveOut: false,
-        loading:false };
+        loading:false 
+      };
+      this.timeout = 0;
       this.login = this.login.bind(this);
       this.onSuccess = this.onSuccess.bind(this)
       //SocialAuth.setFacebookApp({id: '1301593236623308', name: 'Madina Women Hospital ICSI'});
   }
 
+  componentWillMount() {
+    api.setHeader('Authorization','Bearer ' + String(this.props.user.token));
+  }
+  componentWillUnmount() {
+    clearTimeout(this.timeout);
+  }
   componentWillUpdate() {
     LayoutAnimation.easeInEaseOut();
   }
-  componentWillReceiveProps(props){
-    if(this.props.loading !== props.loading){
-      this.setState({loading:Boolean(props.loading)});
-    }
-    if(props.success===true && props.loading > 0){
-      this.onSuccess(props.loading);
-    }
-  }
-  async login(){
+
+  login(){
     const {username, password} = this.state;
     let fb = {userId:null, accessToken:null};
-
+    this.setState({loading:1});
+    let promise;
     if(this.state.nofacebook){
-      if(!username || !password)return this.setState({error:['please user you username and password','or use facebook if you have an invitation']});
+      if(!username || !password)return this.setState({loading:-1, error:['please enter your username and password','or use facebook if you have do have an invitation']});
+      promise = this.props.attemptLogin({username, password})
     } else {
-      fb = await SocialAuth.getFacebookCredentials(['public_profile','email','user_work_history'], SocialAuth.facebookPermissionsType.read);
+      return SocialAuth.getFacebookCredentials(['public_profile','email','user_work_history'], SocialAuth.facebookPermissionsType.read)
+        .then(r=>this.props.attemptLogin(r))
+        .then(this.onSuccess)
+        .catch(this.onSuccess)
     }
-
-      api.dispatch(LOGIN({
-        username,
-        password,
-        fb_id: fb.userId,
-        token: fb.accessToken,
-      }));
+    console.log(promise);
+    promise.then(this.onSuccess).catch(this.onSuccess);
   }
-  onSuccess(data){
-      this.refs.circ.transitionTo({scale:100},1500)
-      setTimeout(()=>api.dispatch({type:'SET_STATE',path:['user_id'],payload:data}),2000);
-      this.setState({loading:false,success:true, error:''});
+  onSuccess(r){
+      if(r.ok && r.data && r.data.token && r.data.id){
+        api.setHeader('Authorization','Bearer '+r.data.token);
+        this.props.addUser(r.data);
+        this.refs.circ.transitionTo({scale:100},1500)
+        this.timeout = setTimeout(()=>this.props.setAppUser(r.data.id),2000);
+        return this.setState({loading:false,success:true, error:''});
+      }
+      console.log('Error !',r);
+      this.setState({
+        loading:-1,
+        error: [].concat(r.message, r.data && r.data.message),
+      })
   }
   render() {
     let scale = {transform: [{scale: 1}]};
@@ -92,11 +106,12 @@ class LoginApp extends Component {
           <View style={[styles.box,{paddingBottom:0,overflow:'hidden'}]} >
 
 
-          {this.props.loading===-1  &&<Text style={[{textAlign:'center',fontSize:15,color:'red'}]}>
-            Login failed
-          </Text>}
+          {this.state.loading===-1  &&<View style={{display:'flex',flexDirection:'column',maxHeight:200,'overflow':'scroll'}}>
+            <Text style={[{textAlign:'center',fontSize:15,color:'red'}]}> Login failed </Text>
+            {Array.isArray(this.state.error) && this.state.error.map((e,i)=><Text style={[{textAlign:'center',fontSize:15,color:'white'}]} key={`error_${i}`}>{JSON.stringify(e)}</Text>)}
+          </View>}
 
-          {this.props.loading===1 && <ActivityIndicator color="white" style={{backgroundColor:'transparent',marginTop:15}} /> }
+          {this.state.loading===1 && <ActivityIndicator color="white" style={{backgroundColor:'transparent',marginTop:15}} /> }
 
 
 
@@ -126,7 +141,7 @@ class LoginApp extends Component {
             returnKeyType="go"
             underlineColorAndroid='rgba(0,0,0,0)'
             onSubmitEditing={this.login}
-            onChangeText={password=>this.setState({error:[],loadgin:false,password})}
+            onChangeText={password=>this.setState({error:[],loading:false,password})}
             style={[{flex:1,marginLeft:-40,textAlign:'center'}]}/>
           </View>}
 
@@ -137,7 +152,7 @@ class LoginApp extends Component {
             <Animatable.View duration={1000} transition="height" style={{backgroundColor:"#3b5998",height:50,flexDirection:'row',justifyContent:'center',alignItems:'center'}}>
               <FontAwesome name={this.state.nofacebook ? "power-off" :"facebook"} color="white" size={18}/>
               {!this.state.success &&<Text style={{color:'white',margin:10,fontWeight:'500'}}>
-                {this.state.nofacebook ? 'Login with password' : 'Register or Login with Facebook'}
+                {this.state.nofacebook ? 'Login with password' : 'Use Facebook to Login'}
               </Text>}
               <Animatable.View ref="circ" duration={1000} transition="width" style={[{backgroundColor:'#3b5998',borderRadius:10,height:10,zIndex:-1,width:10}]} />
             </Animatable.View>
@@ -147,7 +162,7 @@ class LoginApp extends Component {
           <View style={{flex:1}} />
 
           {!this.state.success &&
-          <TouchableOpacity style={[{marginTop:15,flexDirection:'row',justifyContent:'center',alignItems:'center'}]} onPress={()=>this.setState({username:'',password:'',nofacebook:!this.state.nofacebook})}>
+          <TouchableOpacity style={[{marginTop:15,flexDirection:'row',justifyContent:'center',alignItems:'center'}]} onPress={()=>this.setState({username:'',password:'',error:[], loading:0, nofacebook:!this.state.nofacebook})}>
               <Text style={[styles.btnText,{borderBottomWidth:1,color:'purple',fontSize:16,overflow:'hidden'}]}> {this.state.nofacebook ? 'use ' : "I don't have"} facebook account </Text>
           </TouchableOpacity>}
 
@@ -160,12 +175,27 @@ class LoginApp extends Component {
 }
 
 
-
-const p = (state, props) =>({
-  loading: state.getIn(['api','LOGIN']),
-  success: Boolean(state.getIn(['users',state.getIn(['api','LOGIN']),'id'])),
-  uid: state.getIn(['users',state.user_id,'id']),
-  //loading:{},
+const passProps = (state, props) =>({
+  uid: selectors.selectAppUserId(state),
+  user: selectors.selectAppUser(state),
 })
 
-export default connect(p)(LoginApp);
+const mapActions = dispatch => bindActionsToDispatch(['attemptLogin','addUser','setAppUser'],actions,dispatch)
+
+LoginApp.propTypes = {
+  uid: PropTypes.string,
+  user: PropTypes.instanceOf(UserShape),
+  dispatch: PropTypes.func.isRequired,
+  attemptLogin: PropTypes.func.isRequired,
+  addUser: PropTypes.func.isRequired,
+  setAppUser: PropTypes.func.isRequired,
+};
+LoginApp.displayName = 'LoginApp';
+LoginApp.defaultProps = ({
+  uid: 0,
+  user: new UserShape({})
+})
+
+
+export default connect(passProps, mapActions)(LoginApp);
+

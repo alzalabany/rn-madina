@@ -23,3 +23,13 @@ export const timeToHuman = (time)=>{
  
  return ' '+y+':'+min+am+' ';
 }
+
+/**
+ * 
+ * @param {array} config 
+ * @param {object} actions 
+ * @param {function} dispatch 
+ */
+export const bindActionsToDispatch = (config, actions, dispatch)=>{
+  return config.reduce((carry,a)=> Object.assign(carry,{[a]:(...args) => (console.log(a, args,actions[a]),dispatch(actions[a].apply(null, args)))}) ,{dispatch});
+}
