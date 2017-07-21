@@ -110,7 +110,7 @@ export default class App {
     HTTP.on403 = ()=>this.startApp('login');
     HTTP.on401 = ()=>this.startApp('login');
 
-    timeout = setTimeout(() => {
+    let timeout = setTimeout(() => {
       console.log('loading icons and store took too long, i will intialize anyway')
       store.subscribe(this.onStoreUpdate);
       store.dispatch(appActions.appInitialized())

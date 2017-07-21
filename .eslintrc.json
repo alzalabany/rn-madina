@@ -21,12 +21,51 @@
         "sourceType": "module"
     },
     "rules": {
-        "no-const-assign": "warn",
-        "no-this-before-super": "warn",
-        "no-undef": "warn",
-        "no-unreachable": "warn",
-        "no-unused-vars": "warn",
-        "constructor-super": "warn",
-        "valid-typeof": "warn"
+        "comma-dangle": 0, // disallow trailing commas in object literals
+        "no-cond-assign": 1, // disallow assignment in conditional expressions
+        "no-console": 0, // disallow use of console (off by default in the node environment)
+        "no-constant-condition": 0, // disallow use of constant expressions in conditions
+        "no-control-regex": 1, // disallow control characters in regular expressions
+        "no-debugger": 1, // disallow use of debugger
+        "no-dupe-keys": 2, // disallow duplicate keys when creating object literals
+        "no-empty": 0 // disallow empty statements
+    },
+     "globals": {
+        "__BUNDLE_START_TIME__": false,
+        "__DEV__": true,
+        "__dirname": false,
+        "__filename": false,
+        "__fbBatchedBridgeConfig": false,
+        "alert": false,
+        "cancelAnimationFrame": false,
+        "clearImmediate": true,
+        "clearInterval": false,
+        "clearTimeout": false,
+        "console": false,
+        "document": false,
+        "escape": false,
+        "exports": false,
+        "global": false,
+        "jest": false,
+        "pit": false,
+        "Map": true,
+        "module": false,
+        "navigator": false,
+        "process": false,
+        "Promise": false,
+        "requestAnimationFrame": true,
+        "require": false,
+        "Set": true,
+        "setImmediate": true,
+        "setInterval": false,
+        "setTimeout": false,
+        "window": false,
+        "FormData": true,
+        "XMLHttpRequest": false,
+
+        // Flow "known-globals" annotations:
+        "ReactElement": false,
+        "ReactClass": false,
+        "Class": false
     }
 }
