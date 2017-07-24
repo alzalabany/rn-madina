@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import moment from 'moment';
+import {Map} from 'immutable';
 
 import {
   StyleSheet,
@@ -7,17 +9,8 @@ import {
   View,
   TouchableOpacity
 } from 'react-native';
-const Visits = {}
 
-
-
-Visits.List = props => null
-
-Visits.Stats = props => null
-
-
-Visits.Row =  props =>{
-    const data = props.data || {};
+const VisitRow =  props =>{
     return (
       <TouchableOpacity style={styles.container} onPress={()=>props.navigate('visit','Visit Card',{id:1})}>
         <View style={styles.row}>
@@ -74,4 +67,31 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Visits;
+VisitRow.displayName = 'Visit Form';
+VisitRow.propTypes = {
+  data: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    day: PropTypes.number,
+    status: PropTypes.string.isRequired,
+    patient: PropTypes.number.isRequired,
+    ref_id: PropTypes.number.isRequired,
+    type: PropTypes.string.isRequired,
+    services: PropTypes.string,
+  }).isRequired,
+  navigate: PropTypes.func.isRequired,
+  nodr: PropTypes.bool,
+};
+VisitRow.defaultProps = ({
+  navigate:console.warn,
+  nodr: false,
+  data: {
+    id:0,
+    day:'today',
+    status:'booked',
+    patient:0,
+    ref_id:0,
+    type:'',
+    services:'',
+  },
+})
+export default VisitRow;

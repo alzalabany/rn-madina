@@ -7,29 +7,19 @@ import {
   View,Linking,FlatList,
   ActivityIndicator,Image,
   Dimensions,Modal,KeyboardAvoidingView,
-  ScrollView,TouchableOpacity,TextInput,Button
+  ScrollView,TouchableOpacity,TextInput,Button,Platform
 } from 'react-native';
-import ImageSrd from '../../assets/images/location.png';
-// import {openLink} from '../tools';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {api} from '../api';
-const {width,height} = Dimensions.get('window');
 
+import {openLink} from '../tools';
+import {api} from '../api';
+import * as appSelectors from '../selectors';
+import ImageSrd from '../../assets/images/location.png';
+
+const {width,height} = Dimensions.get('window');
 const innerWidth = width-20;
 
-var matcher = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
-/**
- * Loosely validate a URL `string`.
- *
- * @param {String} string
- * @return {Boolean}
- */
-const showDate = post => {
-  d = moment((post.created_at+'000')/1);
-  if(d.isValid())return 'posted on: '+d.calendar().split(' at')[0];
-  return null
-}
-class Blog extends Component {
+class MoreScreen extends Component {
     constructor(props){
       super(props);
       this.state = {modalVisible:false,
@@ -40,34 +30,29 @@ class Blog extends Component {
         ],
         loading:true};
       this.post = this.post.bind(this)
-      this.props.navigator.setOnNavigatorEvent((event)=>(event.type == 'NavBarButtonPress' && event.id==='logout') && this.props.logout(this.props.navigator.dismissAllModals({animationType: 'slide-down'})));
-
+      this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this));
+  }
+  onNavigatorEvent(event){
+    console.log('Navigation from %cMoreScreen','color:green;font-size:16px;', event);
+    switch (event.id) {
+      case "bottomTabSelected":
+        //screen selected
+        break;
+      case "logout":
+        this.props.logout();
+        break;
+      default:
+        break;
+    }
   }
   componentDidMount(){
     if(this.state.loading===false)this.setState({loading:true});
     this.setState({loading:false})
-    this.post();
     api.get('token/info').then(r=>{
       if(r.ok && Array.isArray(r.data)){
         this.setState({info:r.data});
       }
     })
-  }
-  cardText(rtl){
-    return {
-      padding:10,
-      textAlign:rtl?'right':'left'
-    }
-  }
-  openLink(url,url2){
-    console.log('opening'+url);
-    Linking.canOpenURL(url).then(supported => {
-        if (supported) {
-            Linking.openURL(url);
-        } else {
-            return url2 && this.openLink(url2);
-        }
-    }).catch(err => console.error('An error occurred', err));
   }
   async post(){
     this.setState({loading:true});
@@ -99,10 +84,11 @@ class Blog extends Component {
 
         <View style={[styles.card,{borderRadius:10,overflow:'hidden',elevation:10}]}>
 
-          <TouchableOpacity onPress={this.openLink.bind(this,'geo:31.2104889,29.9387942','http://maps.apple.com/?ll=31.2104889,29.9387942')}>
+          <TouchableOpacity onPress={()=>openLink(Platform.OS!=='ios' ? 'geo:31.2104889,29.9387942':'http://maps.apple.com/?ll=31.2104889,29.9387942')}>
           <Image resizeMode={'stretch'} style={{width:innerWidth,height:200,marginBottom:20}} source={ImageSrd} />
           </TouchableOpacity>
 
+          <TouchableOpacity onPress={()=>openLink(Platform.OS!=='ios' ? 'geo:31.2104889,29.9387942':'http://maps.apple.com/?ll=31.2104889,29.9387942')}>
           <View style={styles.row}>
             <Text style={styles.label}>Address</Text>
             <Text style={styles.value}>
@@ -110,12 +96,13 @@ class Blog extends Component {
               <Text>Semouha, Alexandria</Text>
             </Text>
           </View>
+          </TouchableOpacity>
 
           <View style={styles.hr} />
           {this.state.info.map((item,key)=><View key={'info'+key}>
                     <View style={styles.row}>
                       <Text style={styles.label}>{item.label}</Text>
-                      <TouchableOpacity style={{flex:1}} onPress={this.openLink.bind(this,item.link)}>
+                      <TouchableOpacity style={{flex:1}} onPress={()=>openLink(item.link)}>
                         <Text style={styles.value}>{item.value}</Text>
                       </TouchableOpacity>
                     </View>
@@ -126,7 +113,7 @@ class Blog extends Component {
           {/*IMAGE*/}
 
           <View style={[styles.row,styles.center]}>
-            <TouchableOpacity onPress={this.openLink.bind(this,'https://www.facebook.com/madinawomen/')}>
+            <TouchableOpacity onPress={openLink.bind(this,'https://www.facebook.com/madinawomen/')}>
             <View style={{height:30,padding:15,backgroundColor:"#3b5998",overflow:'hidden',borderRadius:30,height:50,width:50,justifyContent:'center',alignItems:'center'}}>
               <FontAwesome name="facebook" style={{fontSize:22,color:'white'}} onPress={this.loginWithFacebook} />
             </View>
@@ -281,7 +268,7 @@ const styles = StyleSheet.create({
 });
 
 const stateToProps = (state,props) => ({
-  role: state.getIn('users',state.user_id,'role'),
+  role: appSelectors.selectAppUserRole(state),
 });
 
-export default connect(stateToProps)( Blog );
+export default connect(stateToProps)( MoreScreen );

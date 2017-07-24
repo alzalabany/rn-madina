@@ -1,5 +1,5 @@
 import {
-  StyleSheet, Dimensions,
+  StyleSheet,
 } from 'react-native';
 
 const tab = {
@@ -8,6 +8,7 @@ const tab = {
   maxWidth: 200,
   padding: 10,
 };
+
 export default StyleSheet.create({
   avisit: {
     borderBottomWidth: 2,
