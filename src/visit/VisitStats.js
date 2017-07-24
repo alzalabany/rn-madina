@@ -58,9 +58,9 @@ const VisitRow = ({ data, total }) => {
 };
 
 
-VisitRow.displayName = 'Visit Form';
+VisitRow.displayName = 'Visit Statistics';
 VisitRow.propTypes = {
-  data: PropTypes.instanceOf(Map).isRequired,
+  data: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string.isRequired })).isRequired,
   total: PropTypes.number, // if given, will show total %
 };
 VisitRow.defaultProps = ({

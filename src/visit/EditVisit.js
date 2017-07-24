@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { Map, Record } from 'immutable';
 import moment from 'moment';
 import { connect } from 'react-redux';
 import {
@@ -6,13 +8,19 @@ import {
   Text,
   View, Alert, RefreshControl,
   ScrollView,
-  Image, Modal, Button, LayoutAnimation,
-  TextInput, Dimensions, ActivityIndicator,
+  Image,
+  LayoutAnimation,
+  TextInput,
+  Dimensions,
+  ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 import Bg from '../../assets/images/longbg.png';
 import { Navigation } from 'react-native-navigation';
 import { api } from '../api';
+import { timeToHuman } from '../tools';
+import { selectAppUserRole, selectUsers } from '../selectors';
+import { CardShape } from './ducks';
 
 const User = props => null;
 const Calendar = props => null;
@@ -21,13 +29,8 @@ const { width, height } = Dimensions.get('window');
 
 const innerWidth = width - 60;
 
-const extras = [
-  'imsi', 'emberyoscope', 'LAh', 'vit. all', 'PGD', 'basket',
-];
 const sections = {
   Personal: [
-    // {label:'day', type:'text'},
-    // {label:'slot', type:'text'},
     { immutable: true, label: 'ID', name: 'id', type: 'number' },
     { label: 'serial no', name: 'serial_no', type: 'number' },
     { label: 'patient', name: 'patient', type: 'text' },
@@ -37,8 +40,8 @@ const sections = {
     { label: 'is_pregnant', name: 'is_pregnant', hidden: true, type: 'text' },
     { immutable: true, label: 'ref_id', name: 'ref_id', hidden: true, type: 'text' },
     { immutable: true, label: 'room_id', name: 'room_id', hidden: true, type: 'text' },
-    { immutable: true, label: 'doctor', value: (props, state) => props.user.fullname || 'N/A', type: 'text' },
-    { immutable: true, label: 'room', value: (props, state) => props.room.name || state.data.room_id, type: 'text' },
+    { immutable: true, label: 'doctor', value: (props, state) => (state.visit.getDr ? state.visit.getDr() : 'N/A'), type: 'text' },
+    { immutable: true, label: 'room', value: (props, state) => state.visit.room_id, type: 'text' },
     { label: 'services', name: 'services', type: 'array' },
     { label: 'husband', name: 'husband', type: 'text' },
     { label: 'husband age', name: 'husband_age', type: 'text' },
@@ -46,6 +49,10 @@ const sections = {
     { label: 'note', name: 'note', type: 'text', multiline: true },
     { label: 'HCG time', name: 'hcg', type: 'text' },
     { label: 'day of e2', name: 'e2', type: 'number' }],
+  notes: [
+    { label: 'Dr. note', name: 'note', type: 'text', multiline: true, immutable: true },
+    { label: 'Extra Notes', name: 'extra_note', type: 'text', multiline: true },
+  ],
   'Clinical Data': [
     { label: 'hepatitis', name: 'hepatitis', type: 'text' },
     { label: 'indications', name: 'indications', type: 'text', multiline: true },
@@ -84,7 +91,7 @@ const sections = {
     { label: 'R.P.', name: 'post_rp', type: 'text' },
     { label: 'Abn', name: 'post_abn', type: 'text' },
   ],
-  // "Witnesses":[],
+
   Oocytes: [
     { label: 'O.R', name: 'oocyte_or', type: 'text' },
     { label: 'Intact', name: 'oocyte_intact', type: 'text' },
@@ -127,119 +134,108 @@ const sections = {
   ],
 };
 
-
-function timeToHuman(time) {
-  const x = String(time);
-  const min = x.split(':')[1] || '00';
-  let y = x.indexOf(':') ? x.split(':')[0] / 1 : x / 1;
-  const am = y >= 12 ? 'pm' : 'am';
-  y = y === 12 ? 12 : y > 12 ? y - 12 : y < 10 ? `0${y}` : y;
-
-  return ` ${y}:${min}${am} `;
-}
-
 class CreatePage extends Component {
   static navigatorStyle = {
-    navBarTextColor: 'white', // change the text color of the title (remembered across pushes)
-    navBarBackgroundColor: 'purple', // change the background color of the nav bar (remembered across pushes)
+    navBarTextColor: 'white',
+    navBarBackgroundColor: 'purple',
     navBarButtonColor: '#FFF',
   };
+  static navigatorButtons = {
+    rightButtons: [{
+      title: 'save',
+      id: 'save',
+      disabled: false,
+      disableIconTint: true,
+      buttonColor: 'white',
+      buttonFontSize: 14,
+      buttonFontWeight: '600',
+    }],
+    leftButtons: [{
+      title: 'back',
+      id: 'back',
+      testID: 'e2e_rules',
+      disabled: false,
+      disableIconTint: true,
+      showAsAction: 'ifRoom',
+      buttonColor: 'white',
+      buttonFontSize: 14,
+      buttonFontWeight: '600',
+    }],
+    animated: true,
+  }
   constructor(props) {
     super(props);
 
     this.state = {
       refreshing: false,
       date: moment().add(2, 'days'),
-      width: width * 0.3,
-      extra: [],
-      showSection: String(this.props.visit.type).toLowerCase() === 'icsi' ? null : 'Personal',
-      data: Object.assign({}, this.props.visit),
-      hasChanges: [],
-      shouldShowSave: false,
-      sections,
+      showSection: null,
+      visit: new CardShape({}),
     };
+    this.onRefresh = this.onRefresh.bind(this);
+    this.canEdit = this.canEdit.bind(this);
+    this.save = this.save.bind(this);
+    this.update = this.update.bind(this);
+    this.handleisPregnantClick = this.handleisPregnantClick.bind(this);
+    this.props.navigator.setOnNavigatorEvent(this.onNavigatorEvent.bind(this));
   }
-  componentDidMount() {
-    this.props.navigator.setButtons({
-      rightButtons: [{
-        title: 'save', // for a textual button, provide the button title (label)
-        id: 'save', // id for this button, given in onNavigatorEvent(event) to help understand which button was clicked
-        disabled: false, // optional, used to disable the button (appears faded and doesn't interact)
-        disableIconTint: true, // optional, by default the image colors are overridden and tinted to navBarButtonColor, set to true to keep the original image colors
-        buttonColor: 'white', // Optional, iOS only. Set color for the button (can also be used in setButtons function to set different button style programatically)
-        buttonFontSize: 14, // Set font size for the button (can also be used in setButtons function to set different button style programatically)
-        buttonFontWeight: '600', // Set font weight for the button (can also be used in setButtons function to set different button style programatically)
-      }],
-      leftButtons: [{
-        title: 'back', // for a textual button, provide the button title (label)
-        id: 'back', // id for this button, given in onNavigatorEvent(event) to help understand which button was clicked
-        testID: 'e2e_rules', // optional, used to locate this view in end-to-end tests
-        disabled: false, // optional, used to disable the button (appears faded and doesn't interact)
-        disableIconTint: true, // optional, by default the image colors are overridden and tinted to navBarButtonColor, set to true to keep the original image colors
-        showAsAction: 'ifRoom', // optional, Android only. Control how the button is displayed in the Toolbar. Accepted valued: 'ifRoom' (default) - Show this item as a button in an Action Bar if the system decides there is room for it. 'always' - Always show this item as a button in an Action Bar. 'withText' - When this item is in the action bar, always show it with a text label even if it also has an icon specified. 'never' - Never show this item as a button in an Action Bar.
-        buttonColor: 'white', // Optional, iOS only. Set color for the button (can also be used in setButtons function to set different button style programatically)
-        buttonFontSize: 14, // Set font size for the button (can also be used in setButtons function to set different button style programatically)
-        buttonFontWeight: '600', // Set font weight for the button (can also be used in setButtons function to set different button style programatically)
-      }],
-      animated: true,
-    });
 
-    this.props.navigator.setOnNavigatorEvent((event) => {
-      console.log('edit event', event);
-      if (event.id === 'didAppear') {
-        console.log('hidding navigator');
-        return this.props.navigator.toggleTabs({
-          to: 'hidden', // required, 'hidden' = hide tab bar, 'shown' = show tab bar
-          animated: true, // does the toggle have transition animation or does it happen immediately (optional)
-        });
-      }
-      if (event.id === 'save') {
-        const visit = {};
-        for (const ii in sections) {
-          for (const i in sections[ii]) {
-            const service = sections[ii][i];
-            if (!service.immutable) {
-              visit[service.name] = this.state.data[service.name] || service.name;
-            }
-          }
-        }
-        api.put(`visits/data/${this.props.id}`, visit);
-        this.setState({ shouldShowSave: false });
-        return;
-      }
-      if (event.id !== 'back') return;
-
-      if (this.state.shouldShowSave) {
-        return Alert.alert(
-          'You have unsaved changes',
-          'Click Cancel to cancel all changes, or ok to go back and save them',
-          [
-            { text: 'OK', onPress: () => console.log('OK Pressed!') },
-            { text: 'Cancel',
-              onPress: () => {
-                this.props.navigator.toggleTabs({ to: 'shown', animated: true });
-                this.props.navigator.pop({ animationType: 'slide-down' })
-                ; 
-},
-            },
-          ],
-        );
-      }
-      this.props.navigator.toggleTabs({ to: 'shown', animated: true });
-      this.props.navigator.pop({ animationType: 'fade' });
-    });
-  }
   componentWillReceiveProps(props) {
     if (props.visit !== this.props.visit) {
-      this.setState({ data: Object.assign({}, props.visit) });
+      this.setState({ visit: props.visit.injectStore(props.users) });
     }
   }
   componentWillUpdate() {
     LayoutAnimation.easeInEaseOut();
   }
+
+  onNavigatorEvent(event) {
+    if (!event || !event.id) return;
+    switch (event.id) {
+      case 'didAppear':
+        if (this.props.visit !== this.state.visit) {
+          this.setState({ visit: this.props.visit });
+        }
+        this.props.navigator.toggleTabs({
+          to: 'hidden',
+          animated: true,
+        });
+        break;
+      case 'save':
+        this.save();
+        break;
+      case 'back':
+        if (this.stateshouldShowSave) {
+          Alert.alert(
+            'You have unsaved changes',
+            'Click Cancel to cancel all changes, or ok to go back and save them',
+            [
+              { text: 'OK', onPress: () => console.log('OK Pressed!') },
+              { text: 'Cancel',
+                onPress: () => {
+                  this.props.navigator.toggleTabs({ to: 'shown', animated: true });
+                  this.props.navigator.pop({ animationType: 'slide-down' })
+                  ;
+                },
+              },
+            ],
+          );
+        } else {
+          this.props.navigator.toggleTabs({ to: 'shown', animated: true });
+          this.props.navigator.pop({ animationType: 'fade' });
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  save() {
+    // call save visit
+    this.props.saveVisit(this.state.visit);
+  }
   handleisPregnantClick() {
     Alert.alert(
-      this.props.visit.patient,
+      this.state.visit.patient,
       'is she pregnant ?',
       [
         { text: 'not sure', onPress: () => this.setState({ data: Object.assign({}, this.state.data, { is_pregnant: null }) }) },
@@ -250,79 +246,72 @@ class CreatePage extends Component {
   }
   update(label, value) {
     console.log(`should update ->${label}:${value}`);
-    const hasChanges = this.props.visit[label] !== value ? this.state.hasChanges.concat(label) : this.state.hasChanges.filter(i => i !== label);
-    const shouldShowSave = hasChanges.length > 0;
-    console.log(hasChanges, shouldShowSave, this.state.shouldShowSave);
-
-    this.setState({
-      data: Object.assign({}, this.state.data, { [label]: value }),
-      hasChanges,
-      shouldShowSave,
-    });
   }
-  _onRefresh() {
-    this.setState({ refreshing: true });
-    setTimeout(() => this.setState({ refreshing: false }), 2000);
+  onRefresh() {
+    this.setState(
+      { refreshing: true },
+      () => setTimeout(() => this.setState({ refreshing: false }), 2000),
+    );
+  }
+  canEdit(name) {
+    return this.props.role === 'admin' ? !Boolean(name.immutable) : false;
   }
   render() {
-    const isSelected = (prop, val, eq) => ((this.state[prop] === val || eq) ? styles.selected : null);
-    const date = moment(this.state.date);
-    this.props.navigator.toggleTabs({
-      to: 'visible', // required, 'hidden' = hide tab bar, 'shown' = show tab bar
-      animated: true, // does the toggle have transition animation or does it happen immediately (optional)
-    });
-    console.log(String(this.props.visit.type).toLowerCase());
-    const sections = String(this.props.visit.type).toLowerCase() === 'icsi' ? Object.keys(this.state.sections) : ['Personal'];
-
+    const visitSections = this.props.visitType === 'icsi' ? Object.keys(sections) : ['Personal'];
     return (
       <View
         refreshControl={
           <RefreshControl
-              tintColor="white"
-              colors={['white', 'green', 'red', 'yellow']}
-              refreshing={this.state.refreshing}
-              onRefresh={this._onRefresh.bind(this)}
-            />}
+            tintColor="white"
+            colors={['white', 'green', 'red', 'yellow']}
+            refreshing={this.state.refreshing}
+            onRefresh={this.onRefresh}
+          />}
         onLayout={event => this.setState({ width: (event.nativeEvent.layout.width * 0.5) - 20 })}
-                style={[styles.card, this.props.style, { flex: 1, backgroundColor: 'rgba(144,75,120,.6)', padding: 0, margin: -10 }]}
+        style={[styles.card, this.props.style, { flex: 1, backgroundColor: 'rgba(144,75,120,.6)', padding: 0, margin: -10 }]}
       >
         <View style={[styles.row, { marginHorizontal: 20 }]}>
           <View style={{ borderColor: 'purple', borderWidth: 1, flex: 1, alignItems: 'center' }}>
             <Text style={{ color: 'grey' }}>State</Text>
             <Text style={{ height: 10 }} />
-            <Text style={{ color: 'purple' }}>{this.props.visit.status}</Text>
+            <Text style={{ color: 'purple' }}>{this.state.visit.status}</Text>
           </View>
-          <TouchableOpacity style={{ flex: 1 }} onPress={this.handleisPregnantClick.bind(this)}>
+          <TouchableOpacity style={{ flex: 1 }} onPress={this.handleisPregnantClick}>
             <View style={{ borderColor: 'purple', borderWidth: 1, flex: 1, alignItems: 'center' }}>
-                <Text style={{ color: 'grey' }}>Pregnancy</Text>
-                <Text style={{ height: 10 }} />
-                <Text style={{ color: 'purple' }}>{this.state.data.is_pregnant === 1 ? 'Yes' : 'No'}</Text>
-              </View>
+              <Text style={{ color: 'grey' }}>Pregnancy</Text>
+              <Text style={{ height: 10 }} />
+              <Text style={{ color: 'purple' }}>{this.state.visit.is_pregnant === 1 ? 'Yes' : 'No'}</Text>
+            </View>
           </TouchableOpacity>
           <View style={{ borderColor: 'purple', borderWidth: 1, flex: 1, alignItems: 'center' }}>
             <Text style={{ color: 'grey' }}>Date</Text>
-            <Text style={{ color: 'purple' }}>{moment(this.props.visit.day).format('DD-MM-YYYY')}</Text>
-            <Text style={{ color: 'purple' }}>{timeToHuman(this.props.visit.slot)}</Text>
+            <Text style={{ color: 'purple' }}>{moment(this.state.visit.day).format('DD-MM-YYYY')}</Text>
+            <Text style={{ color: 'purple' }}>{timeToHuman(this.state.visit.slot)}</Text>
           </View>
         </View>
-
-        {sections.map(i => (<View><TouchableOpacity style={[styles.row, { backgroundColor: 'rgba(0,188,183,1)', padding: 10, marginVertical: 10 }]} onPress={() => this.setState({ showSection: this.state.showSection === i ? null : i })}>
-          <Text style={[{ flex: 1, fontSize: 20, color: 'white', textAlign: 'center' }]}>{i}</Text>
-          {this.state.showSection !== i && <Text style={{ color: 'white' }}>open</Text>}
-        </TouchableOpacity>
-          {this.state.showSection === i && <View>
-          {this.state.sections[i].filter(ix => !ix.hidden).map(name => (<View style={[styles.row, { borderWidth: 1, borderColor: 'purple' }]}>
-            <View style={{ overflow: 'hidden', borderRightWidth: 1, borderColor: 'purple', padding: 10, width: 100 }}>
-                                        <Text style={[styles.label, { flex: 1, textAlign: 'left' }]}>{name.label}</Text>
-            </View>
-            <TextInput multiline={name.multiline} editable={!name.immutable} style={[styles.label, { flex: 1, textAlign: 'center', padding: 10, color: name.immutable ? 'grey':'purple' }]} defaultValue={String((name.value ? name.value(this.props, this.state) : this.state.data[name.name]) || '')} onChangeText={e => this.update(name.name, e)} />
+        <ScrollView style={{ flex: 1 }}>
+          {visitSections.map(i => (<View><TouchableOpacity style={[styles.row, { backgroundColor: 'rgba(0,188,183,1)', padding: 10, marginVertical: 10 }]} onPress={() => this.setState({ showSection: this.state.showSection === i ? null : i })}>
+            <Text style={[{ flex: 1, fontSize: 20, color: 'white', textAlign: 'center' }]}>{i}</Text>
+             <Text style={{ color: 'white' }}>{this.state.showSection === i ? 'close':'open'}</Text>
+          </TouchableOpacity>
+          {this.state.showSection === i && (
+            <View>
+              {sections[i].filter(ix => !ix.hidden)
+                .map(name => (<View style={[styles.row, { borderWidth: 1, borderColor: 'purple' }]}>
+                  <View style={{ overflow: 'hidden', borderRightWidth: 1, borderColor: 'purple', padding: 10, width: 100 }}>
+                    <Text style={[styles.label, { flex: 1, textAlign: 'left' }]}>{name.label}</Text>
+                  </View>
+                  <TextInput
+                    multiline={name.multiline}
+                    editable={this.canEdit(name)}
+                    style={[styles.label, { flex: 1, textAlign: 'center', padding: 10, color: name.immutable ? 'grey' : 'purple' }]}
+                    defaultValue={String(name.value ? name.value(this.props, this.state) : (this.state.visit.get(name.name) || ''))}
+                    onChangeText={e => this.update(name.name, e)}
+                  />
+                </View>))}
+            </View>)}
           </View>))}
-        </View>}
-        </View>))}
-        <Text style={{ color: 'white' }}>
-                ..{JSON.stringify(this.props.visit)}
-        </Text>
-        <View style={{ height: 50 }} />
+        </ScrollView>
       </View>
     );
   }
@@ -396,14 +385,37 @@ const styles = StyleSheet.create({
   },
 });
 
-const state = (state, props) => ({
-  visit: state.getIn(['visits', 'cards', String(props.id)]),
-  user: {},
-  room: {},
-});
+const mapStateToProps = (store, props) => {
+  const visit = store.getIn(['visits', 'cards', String(props.id)]);
+  return {
+    visit,
+    role: selectAppUserRole(store),
+    users: selectUsers(store),
+    room: {},
+    visitType: String(visit.type).toLowerCase(),
+  };
+};
 
 const act = dispatch => ({
   dispatch,
   visitData: id => dispatch({ type: id }),
 });
-export default connect(state, act)(CreatePage);
+
+CreatePage.displayName = 'Visit List';
+CreatePage.propTypes = {
+  visit: PropTypes.instanceOf(Record).isRequired,
+  users: PropTypes.instanceOf(Map).isRequired,
+  role: PropTypes.string.isRequired,
+  navigator: PropTypes.shape({
+    pop: PropTypes.func.isRequired,
+    push: PropTypes.func.isRequired,
+    setOnNavigatorEvent: PropTypes.func.isRequired,
+    toggleTabs: PropTypes.func.isRequired,
+  }).isRequired,
+};
+CreatePage.defaultProps = ({
+  visitType: 'icsi', // String(this.props.visitType).toLowerCase()
+  visit: Map({}),
+});
+
+export default connect(mapStateToProps, act)(CreatePage);

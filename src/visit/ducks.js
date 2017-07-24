@@ -3,8 +3,8 @@ import { createSelector } from 'reselect';
 import moments from 'moment';
 import { API_CALL_ACTION, APP_LOAD } from '../types';
 import { combineReducers } from '../tools';
+import { selectUsers } from '../selectors';
 
-let globalStoreUsers;
 function moment(string) {
   if (!string) return moments();
   return isNaN(Date.parse(string)) ? moments('01-01-1970') : moments(string);
@@ -17,7 +17,7 @@ const mount = 'visits';
 export const FiltersShape = new Record({
   patient: '',
   day: '',
-  room_id: 0,
+  room_id: '',
 });
 const cardRecord = Record({
   andro_embryologist: '',
@@ -112,12 +112,18 @@ export const CARD_STATUS = {
   4: 'inprogress',
   5: 'finished',
 };
-class CardShape extends cardRecord {
+export class CardShape extends cardRecord {
   getStatus() {
     return CARD_STATUS[this.status] || 'N/A';
   }
-  getDr(users = globalStoreUsers) {
-    return (users && users.getIn) ? users.getIn([String(this.ref_id), 'fullname']) : `#${this.ref_id}`;
+  injectStore(store) {
+    if (!store || !store.get) return this;
+    console.log('%cinjecting store','color:green', store.toJS());
+    this.store = store;
+    return this;
+  }
+  getDr() {
+    return (this.store && this.store.getIn) ? this.store.getIn([String(this.ref_id), 'fullname']) : `#${this.ref_id}`;
   }
   getServices() {
     return `${this.services}+${this.extra_services}`;
@@ -150,11 +156,17 @@ export const types = {
 // /////////////
 // ///selectors
 // /////////////
-export const selectCards = state => state.getIn(['visits', 'cards']);
+export const selectVisits = state => state.getIn(['visits', 'cards']);
 export const selectFilters = state => state.getIn(['visits', 'filters']);
 export const selectRoomFilter = state => state.getIn(['visits', 'filters', 'patient']);
 export const selectPatientFilter = state => state.getIn(['visits', 'filters', 'room_id']);
 export const selectDayFilter = state => state.getIn(['visits', 'filters', 'day']);
+
+export const selectCards = createSelector(
+  selectVisits,
+  selectUsers,
+  (visits, users) => visits.map(card => card.injectStore(users))
+);
 
 function sortVisits(visits, filters) {
   if (!visits || !visits.keySeq) return [];
@@ -258,7 +270,6 @@ export const actions = {
   setFilter: (name, value) => ({ type: types.FILTER_SET, payload: [name, value] }),
   download: cb => (dispatch, getState) => {
     const visits = selectCards(getState());
-    globalStoreUsers = getState().get('users');
     const current = visits && visits.keySeq ? visits.keySeq().toArray().map(Number).sort() : [0, 0];
     return dispatch(actions.read({ max_id: current.pop(), min_id: current.shift(), count: 20 }))
       .then((r) => {
@@ -284,7 +295,7 @@ function visitFactory(data, state) {
 
 function cardsReducer(state = cardsState, action) {
   if (action.type === APP_LOAD && action.payload && action.payload.visits && action.payload.visits.cards) {
-    // return visitFactory(action.payload.visits.cards);
+    return visitFactory(action.payload.visits.cards);
   }
 
   if (action.type === types.VISIT_MERGE) {
@@ -297,11 +308,11 @@ function cardsReducer(state = cardsState, action) {
 
 function filtersReducer(state = filtersState, action) {
   if (action.type === types.APP_LOAD && action.payload && action.payload.visits && action.payload.visits.filters) {
-    return Map(action.payload.visits.filters);
+    return Object.entries(action.payload.visits.filters).reduce((carry, i) => carry.set(String(i[0]), String(i[1])), state);
   }
 
-  if (action.type === types.FILTER_SET && Array.isArray(action.payload)) {
-    return state.set(action.payload[0], action.payload[1]);
+  if (action.type === types.FILTER_SET && Array.isArray(action.payload) && state.has(String(action.payload[0]))) {
+    return state.set(String(action.payload[0]), String(action.payload[1]));
   }
 
   return state;

@@ -41,15 +41,9 @@ const cardText = rtl => ({
   textAlign: rtl ? 'right' : 'left',
 });
 class Post extends React.PureComponent {
-  async delete() {
-    const id = this.props.post.id;
-    if (this.state.showConfirmation !== id) {
-      return this.setState({ showConfirmation: id });
-    }
-
-    this.setState({ isDeleting: id });
-    const x = await this.props.onDelete(id);
-    this.setState({ isDeleting: false, showConfirmation: false });
+  constructor(props) {
+    super(props);
+    this.state = { deleting: false };
   }
   render() {
     const { post } = this.props;
@@ -65,7 +59,7 @@ class Post extends React.PureComponent {
           {post.body}
         </Text>
 
-        {!!matcher.test(post.link) && <TouchableOpacity onPress={() => openLink(post.link)} style={styles.btn}>
+        {Boolean(String(post.link).indexOf('://')) && <TouchableOpacity onPress={() => openLink(post.link)} style={styles.btn}>
           <Text style={styles.btnText}>open link</Text>
         </TouchableOpacity>}
 
@@ -73,12 +67,12 @@ class Post extends React.PureComponent {
           {showDate(post.created_at)}
         </Text>
 
-        {!!(this.props.role === 'admin') && <TouchableOpacity onPress={this.delete.bind(this)} style={[styles.btn, { backgroundColor: 'red' }]}>
-          {this.state.isDeleting === post.id && <ActivityIndicator color="white" />}
-          <Text style={[styles.btnText, { color: 'white' }]}>
-            {this.state.showConfirmation === post.id ? 'are you sure ?' : 'delete post'}
-          </Text>
-        </TouchableOpacity>}
+        {!!(this.props.role === 'admin') && (
+          <TouchableOpacity onPress={() => false} style={[styles.btn, { backgroundColor: 'red' }]}>
+            {this.state.isDeleting && <ActivityIndicator color="white" />}
+            <Text style={[styles.btnText, { color: 'white' }]}> Delete post </Text>
+          </TouchableOpacity>
+        )}
 
       </View>
     );
@@ -91,6 +85,7 @@ Post.propTypes = {
 Post.displayName = 'Blog Post box';
 Post.defaultProps = ({
   post: {},
+  role: 'N/A',
 });
 
 export default Post;

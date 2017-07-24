@@ -110,6 +110,7 @@ export default class App {
     const timeout = setTimeout(() => {
       store.subscribe(this.onStoreUpdate);
       store.dispatch(appActions.appInitialized());
+      store.dispatch(appActions.downloadConfig());
     }, 2000);
 
 
@@ -121,6 +122,7 @@ export default class App {
         clearTimeout(timeout);
         store.subscribe(this.onStoreUpdate);
         store.dispatch(appActions.appInitialized());
+        store.dispatch(appActions.downloadConfig());
       });
     });
   }
@@ -169,8 +171,8 @@ export default class App {
       api.setHeader('Authorization', `Bearer ${token}`);
 
 
-      store.dispatch(appActions.blog.download(console.warn));
-      store.dispatch(appActions.visits.download(console.warn));
+      store.dispatch(appActions.blog.download());
+      store.dispatch(appActions.visits.download());
 
       Navigation.startTabBasedApp({
 

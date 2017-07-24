@@ -27,6 +27,7 @@ import { timeToHuman } from '../tools';
 import VisitRow from './Row';
 import Statistics from './VisitStats';
 import * as actions from '../common/actions';
+import { selectAppUserRole, selectAppUserId } from '../selectors';
 
 const { height } = Dimensions.get('window');
 
@@ -236,25 +237,25 @@ class Home extends Component {
         {date && date.format('YYYY-MM-DD') === day ?
           <TouchableOpacity onPress={() => this.setState({ showDatePicker: true })} style={[styles.row, { margin: 0, marginHorizontal: -20, backgroundColor: 'purple', borderBottomWidth: 2, borderColor: 'rgba(189,93,234,1)' }]}>
             <View style={{ flex: 1, borderColor: 'white', padding: 10, borderRightWidth: 2 }}>
-                <Text style={{ textAlign: 'center', color: 'white' }}>{date.format('DD')}</Text></View>
+              <Text style={{ textAlign: 'center', color: 'white' }}>{date.format('DD')}</Text></View>
             <View style={{ flex: 1, borderColor: 'white', padding: 10, borderRightWidth: 2 }}>
-                <Text style={{ textAlign: 'center', color: 'white' }}>{date.format('MMMM YYYY')}</Text></View>
+              <Text style={{ textAlign: 'center', color: 'white' }}>{date.format('MMMM YYYY')}</Text></View>
             <TouchableOpacity style={{ flex: 1, borderColor: 'white', padding: 10, borderRightWidth: 0 }} onPress={() => this.setState({ showDatePicker: false, date: null })}>
-                <View >
+              <View >
                 <Text style={{ textAlign: 'center', color: 'white' }}>
               clear {' '}
-                <Icon name="calendar" />
-              </Text>
+                    <Icon name="calendar" />
+                  </Text>
               </View></TouchableOpacity>
           </TouchableOpacity> :
           <TouchableOpacity onPress={() => this.setState({ showDatePicker: true })} style={[styles.row, { margin: 0, marginHorizontal: -20, backgroundColor: 'purple', borderBottomWidth: 2, borderColor: 'rgba(189,93,234,1)' }]}>
-              <View style={{ flex: 1, borderColor: 'white', padding: 10, borderRightWidth: 2 }}>
+            <View style={{ flex: 1, borderColor: 'white', padding: 10, borderRightWidth: 2 }}>
               <Text style={{ textAlign: 'center', color: 'white' }}>
               Click to Filter by date
               </Text>
             </View>
 
-            </TouchableOpacity>
+          </TouchableOpacity>
         }</View>}
 
       {!!Search && <View style={{ height: 40, justifyContent: 'center', alignItems: 'center', backgroundColor: 'purple', paddingHorizontal: 10, paddingVertical: 5 }}>
@@ -291,42 +292,42 @@ class Home extends Component {
         <View style={[{ backgroundColor: 'white', marginTop: -5, borderRadius: 5, flex: 1, margin: 10, padding: 0 }]}>
           <ScrollView style={[styles.card, { padding: 10, flex: 1 }]}>
             {visits.map((visit, idx) => (<TouchableOpacity key={String(idx)} onPress={() => this.openVisit(visit)}>
-                <View style={styles.avisit}>
+              <View style={styles.avisit}>
                 <View style={styles.row}>
-                  <Text style={styles.label}>Date :</Text>
-                  <Text style={[styles.value, { flex: 1 }]}>{moment(visit.day).format('DD-MMM-YYYY')}      <Text style={styles.timelabel}>{timeToHuman(visit.slot)}</Text> </Text>
-                  <Text style={[styles.row, { color: 'green' }]}>{visit.status || 'booked'}:<View style={[styles.dot, { backgroundColor: 'green' }]} /></Text>
-                </View>
+                    <Text style={styles.label}>Date :</Text>
+                    <Text style={[styles.value, { flex: 1 }]}>{moment(visit.day).format('DD-MMM-YYYY')}        <Text style={styles.timelabel}>{timeToHuman(visit.slot)}</Text> </Text>
+                    <Text style={[styles.row, { color: 'green' }]}>{visit.status || 'booked'}:<View style={[styles.dot, { backgroundColor: 'green' }]} /></Text>
+                  </View>
 
                 <View style={styles.row}>
-                  <Text style={styles.label}>Patient :</Text>
-                  <Text style={styles.value}>{visit.patient}</Text>
-                </View>
+                    <Text style={styles.label}>Patient :</Text>
+                    <Text style={styles.value}>{visit.patient}</Text>
+                  </View>
                 {!!this.props.user.id === visit.ref_id ? null :
-                <View style={styles.row}>
+                  <View style={styles.row}>
                     <Text style={styles.label}>doctor:</Text>
                     <AUser id={visit.ref_id} render={u => <Text style={styles.value}>{u.fullname || 'N/A'}</Text>} />
                   </View>}
 
                 <View style={styles.row}>
-                  <Text style={styles.label}>Service :</Text>
-                  <Text style={styles.value}>{visit.type} <Text style={styles.small}>{visit.services}</Text></Text>
-                </View>
+                    <Text style={styles.label}>Service :</Text>
+                    <Text style={styles.value}>{visit.type} <Text style={styles.small}>{visit.services}</Text></Text>
+                  </View>
 
               </View></TouchableOpacity>))}
 
 
             {Boolean(visits.length === 0 && this.props.role === 'dr') &&
               <TouchableOpacity onPress={() => this.openModal()}>
-              <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, marginTop: 40 }}>
-                <Text style={{ color: 'grey' }}>You didn't Book any Appointements yet</Text>
-                <Text style={{ color: 'grey' }}>Create one now !</Text>
-                <Icon name="arrow-down" size={24} color="grey" style={{ marginTop: 30 }} />
-              </View>
-            </TouchableOpacity>
+                <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, marginTop: 40 }}>
+                  <Text style={{ color: 'grey' }}>You didn't Book any Appointements yet</Text>
+                  <Text style={{ color: 'grey' }}>Create one now !</Text>
+                  <Icon name="arrow-down" size={24} color="grey" style={{ marginTop: 30 }} />
+                </View>
+              </TouchableOpacity>
             }
             {Boolean(visits.length === 0 && Search) && <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, marginTop: 40 }}>
-                <Text style={{ color: 'grey' }}>No match found</Text></View>}
+              <Text style={{ color: 'grey' }}>No match found</Text></View>}
           </ScrollView>
         </View>}
 
@@ -343,8 +344,8 @@ const state = state => ({
   filters: state.get('filters'),
   visits: state.get('visits'),
   users: state.get('users'),
-  uid: state.get('user_id'),
-  role: state.getIn(['users', state.user_id, 'role']),
+  uid: selectAppUserId(state),
+  role: selectAppUserRole(state),
   rooms: state.get('rooms'),
 });
 const act = dispatch => ({

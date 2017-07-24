@@ -9,7 +9,7 @@ export const selectAppUser = createSelector(
   (users, id) => users.get(id),
 );
 export const selectAppUserToken = createSelector(selectAppUser, user => (user ? user.get('token') : null));
-export const selectAppUserRole = createSelector(selectAppUser, user => (user ? user.get('role') : null));
+export const selectAppUserRole = createSelector(selectAppUser, user => (user.get ? (user.get('role') || 'N/A') : 'N/A'));
 
 export default {
   selectAppUser,

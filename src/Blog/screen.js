@@ -68,13 +68,7 @@ class Blog extends Component {
 
     return false;
   }
-
-  delete(post) {
-    if (this.state.deleting !== post.id) return this.setState({ deleting: post.id });
-    this.setState({ isDeleting: post.id });
-    this.props.deletePost(post).then(r => this.setState({ isDeleting: null }));
-  }
-
+  
   open() {
     this.props.navigator.showModal({
       screen: 'ivf.create.blog', // unique ID registered with Navigation.registerScreen

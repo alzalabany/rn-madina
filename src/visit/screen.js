@@ -13,7 +13,7 @@ import { Navigation } from 'react-native-navigation';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { actions, selectCards, selectFilters, selectors } from './ducks';
-import { selectAppUserRole } from '../selectors';
+import { selectAppUserRole, selectUsers } from '../selectors';
 import VisitStats from './VisitStats';
 import VisitList from './visitList';
 import DatePickerRow from './DatePickerRow';
@@ -125,7 +125,7 @@ class VisitScreen extends React.Component {
         keys={this.props.keys}
         data={this.props.data}
         openVisit={this.openVisit}
-        roomId={this.props.filters.get('room_id')}
+        roomId={String(this.props.filters.get('room_id'))}
       />
       {Boolean(this.props.keys.length === 0 && this.props.role === 'dr') &&
         <TouchableOpacity onPress={() => this.openVisit()}>
@@ -136,9 +136,11 @@ class VisitScreen extends React.Component {
           </View>
         </TouchableOpacity>
       }
-      <TouchableOpacity onPress={() => this.openVisit()} style={{ alignItems: 'center', justifyContent: 'center', marginVertical: 20, height: 40 }}>
-        <Text style={{ padding: 10, backgroundColor: 'purple', color: 'white' }}>Book a new Appointement</Text>
-      </TouchableOpacity>
+      <View style={{ justifyContent: 'center', alignItems: 'center', margin: 20 }}>
+        <Icon.Button onPress={() => this.openVisit()} name="plus" backgroundColor="purple">
+          Book new Appointement
+        </Icon.Button>
+      </View>
     </View>);
   }
 }
@@ -146,6 +148,7 @@ class VisitScreen extends React.Component {
 
 const mapStoreStateToProps = state => ({
   role: selectAppUserRole(state),
+  users: selectUsers(state),
   keys: selectors.selectVisitsIds(state),
   stats: selectors.selectVisibleCards(state),
   data: selectCards(state),
@@ -161,6 +164,7 @@ VisitScreen.propTypes = {
   keys: PropTypes.arrayOf(PropTypes.string).isRequired,
   stats: PropTypes.arrayOf(PropTypes.shape({ title: PropTypes.string })).isRequired,
   data: PropTypes.instanceOf(Map).isRequired,
+  users: PropTypes.instanceOf(Map).isRequired,
   filters: PropTypes.instanceOf(Record).isRequired,
   role: PropTypes.string.isRequired,
   logout: PropTypes.func.isRequired,

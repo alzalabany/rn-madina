@@ -64,8 +64,10 @@ const styles = StyleSheet.create({
   timelabel: {
     backgroundColor: 'purple',
     color: 'white',
-    padding: 5,
-    lineHeight: 20,
+    paddingHorizontal: 5,
+    lineHeight: 10,
+    height: 20,
+    paddingTop: 6,
     overflow: 'hidden',
   },
   dot: {
@@ -81,10 +83,11 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: 'bold',
     color: 'purple',
-    marginRight: 20,
-    flex: -1,
-    minWidth: 60,
+    paddingRight: 10,
     textAlign: 'right',
+    minWidth: 80,
+    overflow: 'visible',
+    height: 20,
   },
   value: {
     color: 'red',
@@ -111,17 +114,24 @@ const VisitList = ({ data, keys, roomId, openVisit }) => {
       </View>
 
       <ScrollView style={[styles.card, { padding: 10, flex: 1 }]}>
-        {visits.map((visit, idx) => (
-          <TouchableOpacity key={String(idx)} onPress={() => openVisit(visit)}>
+        {visits.map(visit => (
+          <TouchableOpacity key={`row_${visit.id}`} onPress={() => openVisit(visit)}>
             <View style={styles.avisit}>
               <View style={styles.row}>
-                <Text style={styles.label}>Date :</Text>
-                <Text style={[styles.value, { flex: 1 }]}>{moment(visit.day).format('DD-MMM-YYYY')}         <Text style={styles.timelabel}>{timeToHuman(visit.slot)}</Text> </Text>
-                <Text style={[styles.row, { color: 'green' }]}>{visit.status || 'booked'}:<View style={[styles.dot, { backgroundColor: 'green' }]} /></Text>
+                <Text numberOfLines={1} style={styles.label}>Date:</Text>
+                <View style={[{ flex: 1 }, styles.row]}>
+                  <Text style={[styles.value, { flex: 1 }]}>{moment(visit.day).format('DD-MMM-YYYY')}</Text>
+                  <Text style={styles.timelabel}>{timeToHuman(visit.slot)}</Text>
+                </View>
+
+                <View style={{ flexDirection: 'column', height: 20, overflow: 'visible', marginLeft: 4, alignItems: 'flex-end' }}>
+                  <Text style={[styles.row, { color: 'green' }]}>{visit.status || 'booked'}:<View style={[styles.dot, { backgroundColor: 'green' }]} /></Text>
+                  {!!visit.has_new && <Text style={[styles.row, { color: 'orange' }]}>New Details<View style={[styles.dot, { backgroundColor: 'orange' }]} /></Text>}
+                </View>
               </View>
 
               <View style={styles.row}>
-                <Text style={styles.label}>Patient :</Text>
+                <Text style={styles.label}>Patient:</Text>
                 <Text style={styles.value}>{visit.patient}</Text>
               </View>
               {visit.getDr && <View style={styles.row}>
@@ -130,7 +140,7 @@ const VisitList = ({ data, keys, roomId, openVisit }) => {
               </View>}
 
               <View style={styles.row}>
-                <Text style={styles.label}>Service :</Text>
+                <Text style={styles.label}>Service:</Text>
                 <Text style={styles.value}>{visit.type} <Text style={styles.small}>{visit.services}</Text></Text>
               </View>
 
@@ -147,13 +157,9 @@ VisitList.displayName = 'Visit List';
 VisitList.propTypes = {
   data: PropTypes.instanceOf(Map).isRequired,
   keys: PropTypes.arrayOf(PropTypes.string).isRequired,
-  roomId: PropTypes.string,
-  role: PropTypes.string.isRequired,
   openVisit: PropTypes.func.isRequired,
 };
 VisitList.defaultProps = ({
-  roomId: '',
-  role: 'dr',
   data: Map({}),
   keys: [],
 });

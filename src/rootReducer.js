@@ -1,18 +1,20 @@
 import { Map } from 'immutable';
 import * as types from './types';
 
-import UserReducer from './users/reducer';
 import BlogReducer from './Blog/ducks';
 import visitReducer from './visit/ducks';
+import roomsReducer from './rooms/ducks';
+import usersReducer from './users/ducks';
 import appReducer from './appReducer';
 import { selectAppUserToken } from './selectors';
 import { combineReducers } from './tools';
 
 const reducers = combineReducers({
   [BlogReducer.key]: BlogReducer.reducer,
-  [UserReducer.key]: UserReducer.reducer,
   [visitReducer.key]: visitReducer.reducer,
   [appReducer.key]: appReducer.reducer,
+  [roomsReducer.key]: roomsReducer.reducer,
+  [usersReducer.key]: usersReducer.reducer,
 });
 const initialState = reducers(Map({}), {});
 

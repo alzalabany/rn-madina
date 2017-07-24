@@ -1,8 +1,9 @@
-import { Map } from 'immutable';
+import { Map, fromJS } from 'immutable';
 import * as types from './types';
 
 const key = 'app';
-const initialState = Map({
+
+const initialState = fromJS({
   root: 'after-login',
   user_id: '0',
 });

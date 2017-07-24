@@ -54,8 +54,8 @@ class DatePickerRow extends React.PureComponent {
   }
 
   render() {
-    const day = moment(this.state.day);
-    console.log(day.isValid(), day.format('DD MMMM YYYY'));
+    const day = isNaN(Date.parse(String(this.state.day))) ? {isValid:()=>false} : moment(this.state.day);
+
     return (<TouchableOpacity onPress={this.handleClickAction} style={[{ flexDirection: 'row' }, { backgroundColor: 'rgba(237,237,237,1)', padding: 5, borderRadius: 5 }]}>
       {day.isValid() ? (<View style={{ flex: 1, borderColor: 'rgba(96,166,215,1)', borderRightWidth: 2, flexDirection: 'row' }}>
         <View style={{ flex: 1, borderColor: 'rgba(96,166,215,1)', borderRightWidth: 2 }}>
@@ -75,7 +75,7 @@ class DatePickerRow extends React.PureComponent {
         date={day.isValid() ? day.toDate() : undefined}
         isVisible={this.state.showDatePicker}
         onConfirm={this.handleAction}
-        onCancel={this.handleAction.bind(this, false)}
+        onCancel={()=>this.handleAction(false)}
       />
     </TouchableOpacity>);
   }

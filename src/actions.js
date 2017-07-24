@@ -37,3 +37,16 @@ export function attemptLogin(params) {
     origin: t.AUTH_LOGIN,
   };
 }
+
+
+export function downloadConfig() {
+  // return apiActionCreator('/token', 'post', {token, password}, )
+  return {
+    type: t.API_CALL_ACTION,
+    url: '/system/settings',
+    verb: 'get',
+    throttle: 60000,
+    name: 'APP_START',
+    origin: t.APP_START,
+  };
+}
