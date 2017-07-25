@@ -52,9 +52,7 @@ export const actions = {
   blogMarkAsOld: payload => ({ type: types.BLOG_MARK_OLD, payload }),
   removeBlog: payload => ({ type: types.BLOG_DELETE, payload }),
   download: cb => (dispatch, getState) => {
-    console.log('download');
     const blog = selectBlogPosts(getState());
-    console.log('prefetching blog posts', blog);
     const current = blog && blog.keySeq ? blog.keySeq().toArray().map(Number).sort() : [0, 0];
     return dispatch(actions.blogRead({ max_id: current.pop(), min_id: current.shift(), count: 20 }))
       .then((r) => {

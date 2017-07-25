@@ -11,11 +11,12 @@ export const UserShape = Record({
   token: false,
 });
 function usersFactory(payload, state = initialState) {
-  console.log('pre warning', payload);
-  const users = Array.isArray(payload) ? payload : Object.values(payload);
-  return users.filter(i=>Boolean(i && i.id)).reduce(
-    (carry, u) => carry.set(`${u.id}`, new UserShape(u)),
-    state);
+  let users = Array.isArray(payload) ? payload : Object.values(payload);
+  users = users.filter(i => Boolean(i && i.id)).reduce(
+    (carry, u) => carry.set(String(u.id), new UserShape(u)),
+    initialState,
+  );
+  return users.merge(state);
 }
 function reducer(state = initialState, action) {
   if (
@@ -27,7 +28,9 @@ function reducer(state = initialState, action) {
       action.payload.users
     )
   ) {
-    return usersFactory(action.payload.users, state);
+    const x = usersFactory(action.payload.users, state);
+    console.log(`%c${x.getIn(['1', 'token'])}`, 'color:red;font-size:20px;');
+    return x;
   }
 
   if (action.type === types.AUTH_LOGOUT) {

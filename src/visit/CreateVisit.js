@@ -126,7 +126,6 @@ class CreatePage extends Component {
         if (r.ok) {
           const users = {};
           r.data.reduce((all, item) => (all[item.id] = item, all), users);
-          console.log(users);
           this.props.dispatch({ type: 'IVF/AUTH/MERGE', users });
         }
       });

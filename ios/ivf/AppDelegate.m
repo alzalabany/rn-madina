@@ -16,12 +16,15 @@
 #import "RCCManager.h"
 #import <RCTOneSignal.h>
 
+#import <BugsnagReactNative/BugsnagReactNative.h>
+
 @implementation AppDelegate
 @synthesize oneSignal = _oneSignal;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   NSURL *jsCodeLocation;
+  [BugsnagReactNative start];
 
   /*jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index.ios" fallbackResource:nil];
 

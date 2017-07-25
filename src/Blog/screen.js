@@ -26,7 +26,7 @@ import { makeDefault } from '../tools';
 import Post from './Post';
 
 const PostRecord = makeDefault(new PostShape({}), PostShape);
-console.log('empty', PostRecord());
+
 class Blog extends Component {
   constructor(props) {
     super(props);
@@ -68,7 +68,7 @@ class Blog extends Component {
 
     return false;
   }
-  
+
   open() {
     this.props.navigator.showModal({
       screen: 'ivf.create.blog', // unique ID registered with Navigation.registerScreen

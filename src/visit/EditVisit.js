@@ -29,6 +29,73 @@ const { width, height } = Dimensions.get('window');
 
 const innerWidth = width - 60;
 
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'white',
+  },
+  row: {
+    backgroundColor: 'white',
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  option: {
+    flex: 1,
+    borderRadius: 5,
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  cell: {
+    backgroundColor: 'rgba(237,237,237,1)',
+    color: 'rgba(112,168,180,1)',
+    flex: 1,
+    margin: 5,
+    borderRadius: 5,
+    textAlign: 'center',
+    padding: 5,
+    width: innerWidth / 3,
+  },
+  selected: {
+    color: 'rgba(255,255,255,1)',
+    backgroundColor: 'rgba(96,166,215,1)',
+  },
+  btn: {
+    marginTop: 40,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    backgroundColor: 'rgba(96,166,215,1)',
+  },
+  space: { marginTop: 10 },
+  input: {
+    height: 40,
+    borderColor: 'purple',
+    borderWidth: 1,
+    marginVertical: 5,
+    borderRadius: 5,
+    paddingLeft: 15,
+    backgroundColor: 'rgba(237,237,237,1)',
+  },
+  label: {
+    color: 'rgba(174,118,174,1)',
+    fontWeight: '500',
+  },
+  card: {
+    margin: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    paddingBottom: 50,
+    borderRadius: 4,
+    backgroundColor: 'white',
+    shadowColor: 'black',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowRadius: 5,
+    shadowOpacity: 0.60,
+    elevation: 5,
+  },
+});
 const sections = {
   Personal: [
     { immutable: true, label: 'ID', name: 'id', type: 'number' },
@@ -254,7 +321,7 @@ class CreatePage extends Component {
     );
   }
   canEdit(name) {
-    return this.props.role === 'admin' ? !Boolean(name.immutable) : false;
+    return this.props.role === 'admin' ? !name.immutable : false;
   }
   render() {
     const visitSections = this.props.visitType === 'icsi' ? Object.keys(sections) : ['Personal'];
@@ -290,14 +357,14 @@ class CreatePage extends Component {
           </View>
         </View>
         <ScrollView style={{ flex: 1 }}>
-          {visitSections.map(i => (<View><TouchableOpacity style={[styles.row, { backgroundColor: 'rgba(0,188,183,1)', padding: 10, marginVertical: 10 }]} onPress={() => this.setState({ showSection: this.state.showSection === i ? null : i })}>
+          {visitSections.map(i => (<View key={i}><TouchableOpacity style={[styles.row, { backgroundColor: 'rgba(0,188,183,1)', padding: 10, marginVertical: 10 }]} onPress={() => this.setState({ showSection: this.state.showSection === i ? null : i })}>
             <Text style={[{ flex: 1, fontSize: 20, color: 'white', textAlign: 'center' }]}>{i}</Text>
-             <Text style={{ color: 'white' }}>{this.state.showSection === i ? 'close':'open'}</Text>
+            <Text style={{ color: 'white' }}>{this.state.showSection === i ? 'close' : 'open'}</Text>
           </TouchableOpacity>
-          {this.state.showSection === i && (
+            {this.state.showSection === i && (
             <View>
               {sections[i].filter(ix => !ix.hidden)
-                .map(name => (<View style={[styles.row, { borderWidth: 1, borderColor: 'purple' }]}>
+                .map(name => (<View key={i + name.name} style={[styles.row, { borderWidth: 1, borderColor: 'purple' }]}>
                   <View style={{ overflow: 'hidden', borderRightWidth: 1, borderColor: 'purple', padding: 10, width: 100 }}>
                     <Text style={[styles.label, { flex: 1, textAlign: 'left' }]}>{name.label}</Text>
                   </View>
@@ -317,73 +384,6 @@ class CreatePage extends Component {
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'white',
-  },
-  row: {
-    backgroundColor: 'white',
-    display: 'flex',
-    flexDirection: 'row',
-  },
-  option: {
-    flex: 1,
-    borderRadius: 5,
-    display: 'flex',
-    flexDirection: 'row',
-  },
-  cell: {
-    backgroundColor: 'rgba(237,237,237,1)',
-    color: 'rgba(112,168,180,1)',
-    flex: 1,
-    margin: 5,
-    borderRadius: 5,
-    textAlign: 'center',
-    padding: 5,
-    width: innerWidth / 3,
-  },
-  selected: {
-    color: 'rgba(255,255,255,1)',
-    backgroundColor: 'rgba(96,166,215,1)',
-  },
-  btn: {
-    marginTop: 40,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    backgroundColor: 'rgba(96,166,215,1)',
-  },
-  space: { marginTop: 10 },
-  input: {
-    height: 40,
-    borderColor: 'purple',
-    borderWidth: 1,
-    marginVertical: 5,
-    borderRadius: 5,
-    paddingLeft: 15,
-    backgroundColor: 'rgba(237,237,237,1)',
-  },
-  label: {
-    color: 'rgba(174,118,174,1)',
-    fontWeight: '500',
-  },
-  card: {
-    margin: 10,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    paddingBottom: 50,
-    borderRadius: 4,
-    backgroundColor: 'white',
-    shadowColor: 'black',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowRadius: 5,
-    shadowOpacity: 0.60,
-    elevation: 5,
-  },
-});
 
 const mapStateToProps = (store, props) => {
   const visit = store.getIn(['visits', 'cards', String(props.id)]);

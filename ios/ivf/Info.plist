@@ -31,6 +31,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>BugsnagAPIKey</key>
+	<string>3d0907f83e316a80892f78be64c9f8ed</string>
 	<key>FacebookAppID</key>
 	<string>1301593236623308</string>
 	<key>FacebookDisplayName</key>
@@ -61,7 +63,7 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>upload profile picture</string>
 	<key>UIAppFonts</key>

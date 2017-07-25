@@ -1,9 +1,11 @@
+import { Client } from 'bugsnag-react-native';
 import App from './src/index';
 
+const bugsnag = new Client();
 const navigatorStyle = {
   // Common
   navBarTextColor: '#FFF', // change the text color of the title (remembered across pushes)
-  //navBarTextFontFamily: 'font-name', // Changes the title font
+  // navBarTextFontFamily: 'font-name', // Changes the title font
   navBarBackgroundColor: 'purple', // change the background color of the nav bar (remembered across pushes)
 
   navBarButtonColor: '#FFF', // Change color of nav bar buttons (eg. the back button) (remembered across pushes)
@@ -28,7 +30,7 @@ const navigatorStyle = {
 
   // iOS only
   disabledBackGesture: false, // default: false. Disable the back gesture (swipe gesture) in order to pop the top screen.
-  //screenBackgroundImageName: '<name of image in Images.xcassets>', // Optional. default screen background image.
+  // screenBackgroundImageName: '<name of image in Images.xcassets>', // Optional. default screen background image.
 
   navBarButtonFontSize: 20, // Change font size nav bar buttons (eg. the back button) (remembered across pushes)
   navBarButtonFontWeight: '500', // Change font weight nav bar buttons (eg. the back button) (remembered across pushes)
@@ -42,13 +44,13 @@ const navigatorStyle = {
   navBarRightButtonFontWeight: '600', // Change font weight of right nav bar button
 
   // Android only
-  //navigationBarColor: '#000000', // change the background color of the bottom native navigation bar.
-  //navBarTitleTextCentered: true, // default: false. centers the title.
-  //topBarElevationShadowEnabled: false, // default: true. Disables TopBar elevation shadow on Lolipop and above
-  //statusBarColor: '#000000', // change the color of the status bar.
-  //collapsingToolBarImage: "http://lorempixel.com/400/200/", // Collapsing Toolbar image.
-  //collapsingToolBarImage: require('../../img/topbar.jpg'), // Collapsing Toolbar image. Either use a url or require a local image.
-  //collapsingToolBarCollapsedColor: '#0f2362', // Collapsing Toolbar scrim color.
-}
+  // navigationBarColor: '#000000', // change the background color of the bottom native navigation bar.
+  // navBarTitleTextCentered: true, // default: false. centers the title.
+  // topBarElevationShadowEnabled: false, // default: true. Disables TopBar elevation shadow on Lolipop and above
+  // statusBarColor: '#000000', // change the color of the status bar.
+  // collapsingToolBarImage: "http://lorempixel.com/400/200/", // Collapsing Toolbar image.
+  // collapsingToolBarImage: require('../../img/topbar.jpg'), // Collapsing Toolbar image. Either use a url or require a local image.
+  // collapsingToolBarCollapsedColor: '#0f2362', // Collapsing Toolbar scrim color.
+};
 
-const app = new App(navigatorStyle);
+const app = new App(navigatorStyle, bugsnag);

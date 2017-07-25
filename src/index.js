@@ -95,8 +95,9 @@ async function loadStore({ dispatch }) {
 registerScreens(store, Provider);
 
 export default class App {
-  constructor(appStyle) {
+  constructor(appStyle, debuger) {
     // since react-redux only works on components, we need to subscribe this class manually
+    this.debuger = debuger;
     this.currentRoot = null;
     this.debouncePersistence = 0;
     this.action = type => store.dispatch({ type });
@@ -110,7 +111,6 @@ export default class App {
     const timeout = setTimeout(() => {
       store.subscribe(this.onStoreUpdate);
       store.dispatch(appActions.appInitialized());
-      store.dispatch(appActions.downloadConfig());
     }, 2000);
 
 
@@ -122,7 +122,6 @@ export default class App {
         clearTimeout(timeout);
         store.subscribe(this.onStoreUpdate);
         store.dispatch(appActions.appInitialized());
-        store.dispatch(appActions.downloadConfig());
       });
     });
   }
@@ -167,13 +166,15 @@ export default class App {
       return;
     }
     if (root === 'after-login') {
-      const token = appSelectors.selectAppUserToken(store.getState());
+      const state = store.getState();
+      const id = appSelectors.selectAppUserId(state);
+      const token = appSelectors.selectAppUserToken(state);
       api.setHeader('Authorization', `Bearer ${token}`);
 
 
-      store.dispatch(appActions.blog.download());
-      store.dispatch(appActions.visits.download());
-
+      // store.dispatch(appActions.blog.download());
+      // store.dispatch(appActions.visits.download());
+      store.dispatch(appActions.downloadConfig());
       Navigation.startTabBasedApp({
 
         title: 'Madina Icsi',
@@ -185,6 +186,10 @@ export default class App {
         },
         tabs: this.tabs,
       });
+      if (this.debuger && this.debuger.setUser) {
+        this.debuger.setUser(id, token);
+      }
+
       return;
     }
 

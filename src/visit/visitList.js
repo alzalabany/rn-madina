@@ -86,14 +86,14 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     textAlign: 'right',
     minWidth: 80,
-    overflow: 'visible',
-    height: 20,
+    minHeight: 20,
   },
   value: {
     color: 'red',
   },
   row: {
     flexDirection: 'row',
+    minHeight: 20,
   },
 });
 

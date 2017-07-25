@@ -177,7 +177,6 @@ VisitScreen.propTypes = {
 VisitScreen.displayName = 'VisitScreen';
 VisitScreen.defaultProps = ({
   keys: [],
-  dispatch: console.warn,
 });
 
 export default connect(mapStoreStateToProps, propsForActions)(VisitScreen);

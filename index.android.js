@@ -1,5 +1,7 @@
+import { Client } from 'bugsnag-react-native';
 import App from './src/index';
 
+const bugsnag = new Client();
 const navigatorStyle = {
   // Common
   navBarTextColor: '#FFF', // change the text color of the title (remembered across pushes)
@@ -31,9 +33,9 @@ const navigatorStyle = {
   navBarTitleTextCentered: true, // default: false. centers the title.
   topBarElevationShadowEnabled: true, // default: true. Disables TopBar elevation shadow on Lolipop and above
   statusBarColor: 'purple', // change the color of the status bar.
-  //collapsingToolBarImage: "http://lorempixel.com/400/200/", // Collapsing Toolbar image.
-  //collapsingToolBarImage: require('../../img/topbar.jpg'), // Collapsing Toolbar image. Either use a url or require a local image.
-  //collapsingToolBarCollapsedColor: '#0f2362', // Collapsing Toolbar scrim color.
+  // collapsingToolBarImage: "http://lorempixel.com/400/200/", // Collapsing Toolbar image.
+  // collapsingToolBarImage: require('../../img/topbar.jpg'), // Collapsing Toolbar image. Either use a url or require a local image.
+  // collapsingToolBarCollapsedColor: '#0f2362', // Collapsing Toolbar scrim color.
 };
 
-const app = new App(navigatorStyle);
+const app = new App(navigatorStyle, bugsnag);

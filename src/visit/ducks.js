@@ -118,7 +118,7 @@ export class CardShape extends cardRecord {
   }
   injectStore(store) {
     if (!store || !store.get) return this;
-    console.log('%cinjecting store','color:green', store.toJS());
+    console.log('%cinjecting store', 'color:green', store.toJS());
     this.store = store;
     return this;
   }
@@ -165,7 +165,7 @@ export const selectDayFilter = state => state.getIn(['visits', 'filters', 'day']
 export const selectCards = createSelector(
   selectVisits,
   selectUsers,
-  (visits, users) => visits.map(card => card.injectStore(users))
+  (visits, users) => visits.map(card => card.injectStore(users)),
 );
 
 function sortVisits(visits, filters) {
@@ -217,7 +217,6 @@ function mutate(obj, name) {
 }
 function makeStats(data, keys) {
   const cards = [];
-  console.log('making statistics', keys);
   if (!keys.length || !data || !data.map) return [];
   cards.push({ color: colors[0], title: 'Total', data: keys.length });
 
@@ -284,13 +283,10 @@ export const actions = {
 
 function visitFactory(data, state) {
   const raw = Object.values(data).filter(i => Boolean(i.id));
-  console.log('Data', raw);
-  const newState = raw.reduce(
+  return raw.reduce(
     (carry, i) => carry.set(String(i.id), new CardShape(i)),
     (state && state.set) ? state : cardsState,
   );
-  console.log('new state', newState.toJS());
-  return newState;
 }
 
 function cardsReducer(state = cardsState, action) {
@@ -299,7 +295,6 @@ function cardsReducer(state = cardsState, action) {
   }
 
   if (action.type === types.VISIT_MERGE) {
-    console.log('making history');
     return visitFactory(action.payload, state);
   }
 

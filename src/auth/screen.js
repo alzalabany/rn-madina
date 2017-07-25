@@ -64,7 +64,6 @@ class LoginApp extends Component {
       this.setState({ loading: false, success: true, error: '' });
       return;
     }
-    console.log('Error !', r);
     this.setState({
       loading: -1,
       error: [].concat(r.message, r.data && r.data.message),

@@ -1,14 +1,25 @@
 import { Map, Record } from 'immutable';
-// import { createSelector } from 'reselect';
+import { createSelector } from 'reselect';
+import { selectAppUserId, selectAppUserRole } from '../selectors';
 import { API_CALL_ACTION, APP_LOAD, APP_START, API_SUCCESS } from '../types';
 
 const key = 'rooms';
 
 /** SELECTORS**/
 const selectRooms = state => state.getIn(['rooms']);
+const roomsIadmin = createSelector(
+  selectRooms,
+  selectAppUserId,
+  selectAppUserRole,
+  (rooms, id, role) => {
+    if (role === 'admin') return rooms.keySeq().toArray().sort();
 
+    return rooms.filter(i => i.admins.map(String).indexOf(String(id)) > -1).keySeq().toArray().sort();
+  },
+);
 export const selectors = {
   selectRooms,
+  roomsIadmin,
 };
 
 
@@ -25,6 +36,7 @@ export const RoomShape = Record({
   starting_hour: 7,
   ending_hour: 17,
   weekend: ['0', '6'],
+  admins: [1],
 });
 
 const initialState = Map({});
