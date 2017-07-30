@@ -4,21 +4,17 @@ import moment from 'moment';
 import { Record } from 'immutable';
 
 import {
-  // Image,
   Text,
   View,
   ActivityIndicator,
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
-// import CacheableImage from 'react-native-cacheable-image';
-import FitImage from 'react-native-fit-image';
+// react-native-fs
 // import CacheableImage from '../../components/Image';
 import { openLink } from '../tools';
 import styles from './styles';
-
-const { width } = Dimensions.get('window');
-
+import Image from '../components/Image';
 
 class Post extends React.PureComponent {
   constructor(props) {
@@ -28,18 +24,16 @@ class Post extends React.PureComponent {
   render() {
     const { post } = this.props;
     const isLink = !!String(post.link).match(/^[a-z]{3,10}:\/\//i);
-    const isImage = !!String(post.link).match(/^[a-z]{3,10}:\/\/.*\.(jpg|jpeg|png)/ig);
+    const isImage = !!String(post.link).match(/^[a-z]{3,10}:\/\/.*\.(jpg|jpeg|png|gif)/i);
 
     return (
       <View style={[styles.card, styles.unread]}>
-
-        {isImage && <FitImage
-          indicator
-          indicatorColor="purple" // react native colors or color codes like #919191
-          indicatorSize="large" // (small | large) or integer
+        {isImage && <Image
+          style={{ minHeight: 100, minWidth: 100 }}
           resizeMode={'stretch'}
           source={{ uri: String(post.link) }}
         />}
+
         {String(post.title || '').length > 2 && (
           <Text writingDirection="auto" style={[{ fontWeight: 'bold', fontSize: 18, padding: 10, textAlign: /[\u0600-\u06FF]/.test(post.body) && 'right' }]}>
             {post.title}.
@@ -48,12 +42,12 @@ class Post extends React.PureComponent {
         <Text writingDirection="auto" style={{ padding: 10, textAlign: /[\u0600-\u06FF]/.test(post.body) && 'right' }}>
           {post.body}
         </Text>
-
+        <Text writingDirection="auto" style={[{ fontWeight: 'bold', fontSize: 12, color: 'grey' , textAlign: 'center' }]}>
+          {isNaN(Date.parse(post.created_at || '')) ? null : `Posted on: ${moment(post.created_at).calendar()}`}
+        </Text>
         {isLink && <TouchableOpacity onPress={() => openLink(post.link)} style={styles.btn}>
           <Text style={styles.btnText}>open link</Text>
         </TouchableOpacity>}
-
-        <Text writingDirection="auto" style={[{ fontWeight: 'bold', fontSize: 12, color: 'grey' }]} />
 
         {!!(this.props.role === 'admin') && (
           <TouchableOpacity onPress={() => false} style={[styles.btn, { backgroundColor: 'red' }]}>
@@ -69,6 +63,7 @@ class Post extends React.PureComponent {
 
 Post.propTypes = {
   post: PropTypes.instanceOf(Record).isRequired,
+  role: PropTypes.string.isRequired,
 };
 Post.displayName = 'Blog Post box';
 Post.defaultProps = ({

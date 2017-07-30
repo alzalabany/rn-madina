@@ -14,7 +14,7 @@ const baseURL = 'http://localhost/ivf/';
 const hooks = {
   on403: [],
   on401: [],
-  onRequest: [], // r => console.log('Request:', r)
+  onRequest: [],
   onResponse: [r => console.log(`%c${r.config.method.toUpperCase()}:${r.config.url}`, 'color:purple;font-weight:bold;', r)],
 };
 export const api = create({

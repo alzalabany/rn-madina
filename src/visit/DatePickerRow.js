@@ -9,6 +9,7 @@ import {
   Text,
   Dimensions,
 } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { selectDayFilter, actions } from './ducks';
@@ -25,6 +26,7 @@ const styles = {
     flex: 1,
   },
 };
+const AnimatedIcon = Animatable.createAnimatableComponent(Icon);
 
 class DatePickerRow extends React.PureComponent {
   constructor(props) {
@@ -80,11 +82,22 @@ class DatePickerRow extends React.PureComponent {
             <Icon name="calendar" color="#FFF" />
           </Text>
         </View>) : (
-          <View style={{ flex: 1, borderColor: '#FFF', borderRightWidth: 2 }}>
+          <Animatable.View
+            animation="swing"
+            iterationCount={5}
+            style={{ flex: 1, borderColor: '#FFF', borderRightWidth: 0 }}
+          >
+
             <Text style={{ textAlign: 'center', color: '#FFF' }}>
-              Click To filter by Date <Icon name="calendar" />
+              Click To filter by Date <Icon
+                name="calendar"
+                animation="pulse"
+                easing="ease-out"
+                direction="alternate"
+                iterationCount="infinite"
+              />
             </Text>
-          </View>)}
+          </Animatable.View>)}
         <DateTimePicker
           cancelTextIOS="Clear day"
           date={day.isValid() ? day.toDate() : undefined}

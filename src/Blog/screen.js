@@ -1,22 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import moment from 'moment';
-import { Iterable, Map } from 'immutable';
 import {
-  StyleSheet,
-  Image,
   FlatList,
-  Text,
-  View,
   ActivityIndicator,
-  Dimensions, Modal, KeyboardAvoidingView,
-  ScrollView, TouchableOpacity, TextInput,
 } from 'react-native';
-import RImage from '../../components/Image';
-import ListView from '../../components/ListView';
-import bg from '../../assets/images/bg 2.png';
+import { Map } from 'immutable';
+
 import { iconsMap } from '../icons';
 
 import * as appSelectors from '../selectors';

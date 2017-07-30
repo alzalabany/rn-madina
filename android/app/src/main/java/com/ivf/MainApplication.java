@@ -3,6 +3,7 @@ package com.ivf;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.dylanvann.fastimage.FastImageViewPackage;
 import com.BV.LinearGradient.LinearGradientPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.xxsnakerxx.socialauth.SocialAuthPackage;
@@ -29,6 +30,7 @@ public class MainApplication extends NavigationApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new FastImageViewPackage(),
             new LinearGradientPackage(),
             new VectorIconsPackage(),
             new SocialAuthPackage(),

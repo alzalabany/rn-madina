@@ -17,7 +17,7 @@ import {
 import DateTimePicker from 'react-native-modal-datetime-picker';
 
 import { selectAppUserRole, selectAppUser } from '../selectors';
-import Bg from '../../assets/images/longbg.png';
+import Bg from '../assets/images/longbg.png';
 import { api } from '../api';
 // import UserModel from '../auth/model';
 

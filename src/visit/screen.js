@@ -14,14 +14,13 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
 import LinearGradient from 'react-native-linear-gradient';
-
+import * as Animatable from 'react-native-animatable';
 import { actions, selectCards, selectFilters, selectors } from './ducks';
 import { selectAppUserRole, selectUsers } from '../selectors';
 import VisitStats from './VisitStats';
 import VisitList from './visitList';
 import DatePickerRow from './DatePickerRow';
-import GradientBar from '../../assets/images/topnav.png';
-import DrsBgsImage from '../../assets/images/dr.png';
+import DrsBgsImage from '../assets/images/dr.png';
 import { selectors as roomSelectors } from '../rooms/ducks';
 
 import { card } from '../styles';
@@ -251,7 +250,7 @@ class VisitScreen extends React.Component {
     const result = room ? calc(room, this.props.filters.get('day')) : { data: [] };
     const times = result.data;
     const cal = this.props.byDate.get(day.format('YYYY-MM-DD')) || Map({});
-    console.log(result);
+
     return (<View style={styles.container}>
       <Image source={DrsBgsImage} style={{ width, height: height * 0.3, zIndex: -1, position: 'absolute', top: 0 }}>
         <View style={{ backgroundColor: 'rgba(144,75,120,.6)', flex: 1 }} />
@@ -319,10 +318,17 @@ class VisitScreen extends React.Component {
                   </LinearGradient></View>
               </TouchableOpacity>);
           }) : <TouchableOpacity onPress={() => this.setState({ trigger: Math.random() })}>
+
             <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
               <Text style={{ color: 'blue' }}>You didn't Select A Date</Text>
               <Text style={{ color: 'grey' }}>Select Day to view room calendar</Text>
-              <Icon name="arrow-down" size={24} color="grey" style={{ marginTop: 30 }} />
+              <Animatable.View
+                animation="swing"
+                iterationCount={5}
+              >
+                <Icon name="calendar" size={24} color="grey" style={{ marginTop: 10 }} />
+              </Animatable.View>
+
             </View>
           </TouchableOpacity>}
       </ScrollView>

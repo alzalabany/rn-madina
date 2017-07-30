@@ -8,24 +8,16 @@ import {
   Text,
   View, Alert, RefreshControl,
   ScrollView,
-  Image,
   LayoutAnimation,
   TextInput,
   Dimensions,
-  ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import Bg from '../../assets/images/longbg.png';
-import { Navigation } from 'react-native-navigation';
-import { api } from '../api';
 import { timeToHuman } from '../tools';
 import { selectAppUserRole, selectUsers } from '../selectors';
 import { CardShape } from './ducks';
 
-const User = props => null;
-const Calendar = props => null;
-
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const innerWidth = width - 60;
 
@@ -361,7 +353,7 @@ class CreatePage extends Component {
             <Text style={[{ flex: 1, fontSize: 20, color: 'white', textAlign: 'center' }]}>{i}</Text>
             <Text style={{ color: 'white' }}>{this.state.showSection === i ? 'close' : 'open'}</Text>
           </TouchableOpacity>
-          {this.state.showSection === i && (
+            {this.state.showSection === i && (
             <View>
               {sections[i].filter(ix => !ix.hidden)
                 .map(name => (<View key={i + name.name} style={[styles.row, { borderWidth: 1, borderColor: 'purple' }]}>

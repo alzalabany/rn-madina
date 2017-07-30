@@ -15,7 +15,7 @@
     "react": "16.0.0-alpha.6",
     "react-native": "0.44.0",
     "react-native-animatable": "^1.2.0",
-    "react-native-fit-image": "^1.5.2",
+    "react-native-fs": "^2.3.3",
     "react-native-linear-gradient": "react-native-community/react-native-linear-gradient",
     "react-native-modal-datetime-picker": "^4.6.0",
     "react-native-modal-picker": "^0.0.16",
