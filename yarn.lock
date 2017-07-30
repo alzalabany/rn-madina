@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@remobile/react-native-cache-image@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@remobile/react-native-cache-image/-/react-native-cache-image-1.0.4.tgz#bf067ed6b9cf37fddd39ccb8870e4d0bcbfc33a4"
+
 abab@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/abab/-/abab-1.0.3.tgz#b81de5f7274ec4e756d797cd834f303642724e5d"
@@ -1002,12 +1006,6 @@ bser@^2.0.0:
 buffer-shims@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/buffer-shims/-/buffer-shims-1.0.0.tgz#9978ce317388c649ad8793028c3477ef044a8b51"
-
-bugsnag-react-native@^2.2.4:
-  version "2.2.4"
-  resolved "https://registry.yarnpkg.com/bugsnag-react-native/-/bugsnag-react-native-2.2.4.tgz#b21e1c501dec8c91760fbf9d22c66f3b28d780f9"
-  dependencies:
-    promise "^7"
 
 builtin-modules@^1.0.0, builtin-modules@^1.1.1:
   version "1.1.1"
@@ -3445,12 +3443,6 @@ progress@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.0.tgz#8a1be366bf8fc23db2bd23f10c6fe920b4389d1f"
 
-promise@^7:
-  version "7.3.1"
-  resolved "https://registry.yarnpkg.com/promise/-/promise-7.3.1.tgz#064b72602b18f90f29192b8b1bc418ffd1ebd3bf"
-  dependencies:
-    asap "~2.0.3"
-
 promise@^7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/promise/-/promise-7.1.1.tgz#489654c692616b8aa55b0724fa809bb7db49c5bf"
@@ -3530,6 +3522,16 @@ react-native-animatable@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/react-native-animatable/-/react-native-animatable-1.2.0.tgz#fd279c6ee4b49161c6cc3b951ed7765b35a73467"
 
+react-native-fit-image@^1.5.2:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/react-native-fit-image/-/react-native-fit-image-1.5.2.tgz#208bee4234f563b0250780f6da69d8de2950f466"
+
+react-native-linear-gradient@react-native-community/react-native-linear-gradient:
+  version "2.0.0"
+  resolved "https://codeload.github.com/react-native-community/react-native-linear-gradient/tar.gz/82b3eeff5cda5f3c7a76d5755102d0d1a21b349e"
+  dependencies:
+    prop-types "^15.5.10"
+
 react-native-modal-datetime-picker@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/react-native-modal-datetime-picker/-/react-native-modal-datetime-picker-4.6.0.tgz#bf0bfa771d76678eb883dbba1b4ff21dfe885b6d"
@@ -3564,6 +3566,10 @@ react-native-onesignal@^3.0.4:
 react-native-social-auth@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/react-native-social-auth/-/react-native-social-auth-1.0.0.tgz#d0d77ddbb6464c7c00de527f84509aa38dfe85d8"
+
+react-native-textinput-effects@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/react-native-textinput-effects/-/react-native-textinput-effects-0.4.0.tgz#96c27e8fb8a5e95a0e3fc46aaa23c071c4e8be15"
 
 react-native-vector-icons@^4.1.1:
   version "4.1.1"

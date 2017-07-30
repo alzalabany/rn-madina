@@ -9,7 +9,10 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { timeToHuman } from '../tools';
+import { card } from '../styles';
+
 
 const tab = {
   flex: 1,
@@ -43,18 +46,7 @@ const styles = StyleSheet.create({
     color: 'purple',
     fontWeight: '500',
   },
-  card: {
-    elevation: 10,
-    borderRadius: 4,
-    backgroundColor: 'white',
-    shadowColor: 'black',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowRadius: 5,
-    shadowOpacity: 0.60,
-  },
+  card,
   avisit: {
     borderBottomWidth: 2,
     borderColor: 'purple',
@@ -97,58 +89,53 @@ const styles = StyleSheet.create({
   },
 });
 
-const VisitList = ({ data, keys, roomId, openVisit }) => {
+const VisitList = ({ data, keys, openVisit, dispatch }) => {
   const visits = (data && data.get) ? keys.map(id => data.get(String(id))) : [];
-  const titles = ['List', 'Search'];
-  return (
-    <ScrollView style={styles.container}>
-      <View style={{ marginHorizontal: 15 }}>
-        <ScrollView horizontal>
-          {titles.map((i, key) => {
-            const sel = roomId === i || key === 0;
-            return (<TouchableOpacity key={`list_${i}`} style={[sel ? styles.active : styles.inactive, key === 0 ? styles.first : {}, key === titles.length - 1 ? styles.last : {}, { borderRightWidth: 1, borderColor: 'grey' }]}>
-              <Text style={sel ? styles.activeText : styles.inactiveText}>{i}</Text>
-            </TouchableOpacity>);
-          })}
-        </ScrollView>
+
+  return (<ScrollView style={[styles.card, { padding: 10, flex: 1 }]}>
+    {Boolean(keys.length === 0) &&
+    <TouchableOpacity onPress={() => openVisit()}>
+      <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
+        <Text style={{ color: 'grey' }}>You didn't Book any Appointements yet</Text>
+        <Text style={{ color: 'grey' }}>Create one now !</Text>
+        <Icon name="arrow-down" size={24} color="grey" style={{ marginTop: 30 }} />
       </View>
+    </TouchableOpacity>
+    }
+    {visits.map(visit => (
+      <TouchableOpacity key={`row_${visit.id}`} onPress={() => openVisit(visit)}>
+        <View style={styles.avisit}>
+          <View style={styles.row}>
+            <Text numberOfLines={1} style={styles.label}>Date:</Text>
+            <View style={[{ flex: 1 }, styles.row]}>
+              <Text style={[styles.value, { flex: 1 }]}>{moment(visit.day).format('DD-MMM-YYYY')}</Text>
+              <Text style={styles.timelabel}>{timeToHuman(visit.slot)}</Text>
+            </View>
 
-      <ScrollView style={[styles.card, { padding: 10, flex: 1 }]}>
-        {visits.map(visit => (
-          <TouchableOpacity key={`row_${visit.id}`} onPress={() => openVisit(visit)}>
-            <View style={styles.avisit}>
-              <View style={styles.row}>
-                <Text numberOfLines={1} style={styles.label}>Date:</Text>
-                <View style={[{ flex: 1 }, styles.row]}>
-                  <Text style={[styles.value, { flex: 1 }]}>{moment(visit.day).format('DD-MMM-YYYY')}</Text>
-                  <Text style={styles.timelabel}>{timeToHuman(visit.slot)}</Text>
-                </View>
+            <View style={{ flexDirection: 'column', height: 20, overflow: 'visible', marginLeft: 4, alignItems: 'flex-end' }}>
+              <Text style={[styles.row, { color: 'green' }]}>{visit.status || 'booked'}:<View style={[styles.dot, { backgroundColor: 'green' }]} /></Text>
+              {!!visit.has_new && <Text style={[styles.row, { color: 'orange' }]}>New Details<View style={[styles.dot, { backgroundColor: 'orange' }]} /></Text>}
+            </View>
+          </View>
 
-                <View style={{ flexDirection: 'column', height: 20, overflow: 'visible', marginLeft: 4, alignItems: 'flex-end' }}>
-                  <Text style={[styles.row, { color: 'green' }]}>{visit.status || 'booked'}:<View style={[styles.dot, { backgroundColor: 'green' }]} /></Text>
-                  {!!visit.has_new && <Text style={[styles.row, { color: 'orange' }]}>New Details<View style={[styles.dot, { backgroundColor: 'orange' }]} /></Text>}
-                </View>
-              </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Patient:</Text>
+            <Text style={styles.value}>{visit.patient}</Text>
+          </View>
+          {visit.getDr && <View style={styles.row}>
+            <Text style={styles.label}>doctor:</Text>
+            <Text style={styles.value}>{visit.getDr(dispatch)}</Text>
+          </View>}
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Patient:</Text>
-                <Text style={styles.value}>{visit.patient}</Text>
-              </View>
-              {visit.getDr && <View style={styles.row}>
-                <Text style={styles.label}>doctor:</Text>
-                <Text style={styles.value}>{visit.getDr() || 'N/A'}</Text>
-              </View>}
+          <View style={styles.row}>
+            <Text style={styles.label}>Service:</Text>
+            <Text style={styles.value}>{visit.type} <Text style={styles.small}>{visit.services}</Text></Text>
+          </View>
 
-              <View style={styles.row}>
-                <Text style={styles.label}>Service:</Text>
-                <Text style={styles.value}>{visit.type} <Text style={styles.small}>{visit.services}</Text></Text>
-              </View>
-
-            </View></TouchableOpacity>))}
+        </View></TouchableOpacity>))}
 
 
-      </ScrollView>
-    </ScrollView>
+  </ScrollView>
   );
 };
 
@@ -158,6 +145,7 @@ VisitList.propTypes = {
   data: PropTypes.instanceOf(Map).isRequired,
   keys: PropTypes.arrayOf(PropTypes.string).isRequired,
   openVisit: PropTypes.func.isRequired,
+  dispatch: PropTypes.func.isRequired,
 };
 VisitList.defaultProps = ({
   data: Map({}),

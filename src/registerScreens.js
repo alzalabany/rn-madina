@@ -7,7 +7,6 @@ import MoreScreen from './more/screen';
 import AuthScreen from './auth/screen';
 import CreateVisit from './visit/CreateVisit';
 import EditVisit from './visit/EditVisit';
-import RoomsSettings from './Home/roomsSettings';
 
 
 export default function register(store, Provider) {
@@ -18,7 +17,4 @@ export default function register(store, Provider) {
   Navigation.registerComponent('ivf.CreateVisit', () => CreateVisit, store, Provider);
   Navigation.registerComponent('ivf.EditVisit', () => EditVisit, store, Provider);
   Navigation.registerComponent('ivf.create.blog', () => BlogCreateModal, store, Provider);
-  Navigation.registerComponent('ivf.RoomsSetting', () => RoomsSettings, store, Provider);
-  Navigation.registerComponent('ivf.Profile', () => RoomsSettings, store, Provider);
-  Navigation.registerComponent('ivf.autocomplete', () => RoomsSettings, store, Provider);
 }

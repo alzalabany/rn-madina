@@ -116,17 +116,14 @@ export class CardShape extends cardRecord {
   getStatus() {
     return CARD_STATUS[this.status] || 'N/A';
   }
-  injectStore(store) {
-    if (!store || !store.get) return this;
-    console.log('%cinjecting store', 'color:green', store.toJS());
-    this.store = store;
-    return this;
-  }
-  getDr() {
-    return (this.store && this.store.getIn) ? this.store.getIn([String(this.ref_id), 'fullname']) : `#${this.ref_id}`;
+  getDr(dispatch) {
+    if (!dispatch) return `#${this.ref_id}`;
+    return dispatch(
+      (_, get) => get().getIn(['users', String(this.ref_id), 'fullname']),
+    );
   }
   getServices() {
-    return `${this.services}+${this.extra_services}`;
+    return `${this.services}+${this.extra_services ? this.extra_services:''}`;
   }
   getPatient(users) {
     if (!this.loaded) {
@@ -158,15 +155,16 @@ export const types = {
 // /////////////
 export const selectVisits = state => state.getIn(['visits', 'cards']);
 export const selectFilters = state => state.getIn(['visits', 'filters']);
-export const selectRoomFilter = state => state.getIn(['visits', 'filters', 'patient']);
-export const selectPatientFilter = state => state.getIn(['visits', 'filters', 'room_id']);
+export const selectPatientFilter = state => state.getIn(['visits', 'filters', 'patient']);
+export const selectRoomFilter = state => state.getIn(['visits', 'filters', 'room_id']);
 export const selectDayFilter = state => state.getIn(['visits', 'filters', 'day']);
 
-export const selectCards = createSelector(
-  selectVisits,
-  selectUsers,
-  (visits, users) => visits.map(card => card.injectStore(users)),
-);
+export const selectCards = selectVisits;
+// createSelector(
+//   selectVisits,
+//   selectUsers,
+//   (visits, users) => visits.map(card => card.injectStore(users)),
+// );
 
 function sortVisits(visits, filters) {
   if (!visits || !visits.keySeq) return [];
@@ -175,19 +173,20 @@ function sortVisits(visits, filters) {
     const fs = [];
     if (filters.get('room_id')) {
       fs.push(
-        key => visits.getIn([key, 'room_id']) === filters.get('room_id'),
+        key => String(visits.getIn([key, 'room_id'])) === String(filters.get('room_id')),
       );
     }
-    if (filters.get('day') && moment(filters.get('day')).isValid()) {
+    if (
+      filters.get('day') &&
+      Boolean(String(filters.get('day')).match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/gi))
+    ) {
       fs.push(
-        key => moment(filters.get('day')).diff(
-          moment(visits.getIn([key, 'day'])), 'days') === 0,
+        key => visits.getIn([key, 'day']) === filters.get('day'),
       );
     }
     if (filters.get('patient')) {
       fs.push(key => Boolean(String(visits.getIn([key, 'patient'])).match(new RegExp(filters.get('patient'), 'gi'))));
     }
-
 
     if (fs.length) {
       keys = keys.filter(id =>
@@ -195,6 +194,7 @@ function sortVisits(visits, filters) {
       );
     }
   }
+
   return keys.sort((a, b) => visits.getIn([a, 'id']) > visits.getIn([b, 'id']))
     .sort((a, b) => {
       if (visits.getIn([a, 'type']) === visits.getIn([b, 'type'])) {
@@ -217,15 +217,14 @@ function mutate(obj, name) {
 }
 function makeStats(data, keys) {
   const cards = [];
-  if (!keys.length || !data || !data.map) return [];
   cards.push({ color: colors[0], title: 'Total', data: keys.length });
-
+  if (!data || !data.map) return cards;
   // group by type
   const d1s = {};
   const status = {};
-  data.map((i) => {
-    const d1 = i.get('type');
-    const d2 = i.get('status');
+  keys.map((key) => {
+    const d1 = data.getIn([key, 'type']);
+    const d2 = data.getIn([key, 'status']);
     if (d1) {
       mutate(d1s, String(d1).toLowerCase().replace(/ /g, ''));
     }
@@ -238,11 +237,38 @@ function makeStats(data, keys) {
 
   return cards;
 }
-
-export const selectors = {
-  selectVisitsIds: createSelector(selectCards, selectFilters, sortVisits),
-};
-selectors.selectVisibleCards = createSelector(selectCards, selectors.selectVisitsIds, makeStats);
+function byDate(all, roomID, ids) {
+  const state = Map({});
+  return ids.reduce((carry, id) => {
+    const day = all.getIn([id, 'day']);
+    const time = all.getIn([id, 'slot']);
+    const old = carry.has(day) ? carry.get(day).set(time, all.get(id)) : Map({ [time]: all.get(id) });
+    if (!day || !time) return carry;
+    if (roomID) {
+      if (String(roomID) !== String(all.getIn([id, 'room_id']))) {
+        return carry;
+      }
+    }
+    return carry.set(day, old);
+  }, state);
+}
+export const selectors = {};
+selectors.visibleVisitsIds = createSelector(
+  selectCards,
+  selectFilters,
+  sortVisits,
+);
+selectors.visitStatistics = createSelector(
+  selectCards,
+  selectors.visibleVisitsIds,
+  makeStats,
+);
+selectors.visitByDate = createSelector(
+  selectCards,
+  selectRoomFilter,
+  selectors.visibleVisitsIds,
+  byDate,
+);
 
 // /////////////
 // ///actions
@@ -267,6 +293,7 @@ export const actions = {
   }),
   merge: payload => ({ type: types.VISIT_MERGE, payload }),
   setFilter: (name, value) => ({ type: types.FILTER_SET, payload: [name, value] }),
+  setDayFilter: momentObj => ({ type: types.FILTER_SET, payload: ['day', (momentObj && momentObj.isValid() && momentObj.format) ? momentObj.format('YYYY-MM-DD') : ''] }),
   download: cb => (dispatch, getState) => {
     const visits = selectCards(getState());
     const current = visits && visits.keySeq ? visits.keySeq().toArray().map(Number).sort() : [0, 0];

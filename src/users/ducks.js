@@ -28,9 +28,7 @@ function reducer(state = initialState, action) {
       action.payload.users
     )
   ) {
-    const x = usersFactory(action.payload.users, state);
-    console.log(`%c${x.getIn(['1', 'token'])}`, 'color:red;font-size:20px;');
-    return x;
+    return usersFactory(action.payload.users, state);
   }
 
   if (action.type === types.AUTH_LOGOUT) {

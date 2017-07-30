@@ -255,12 +255,9 @@ class CreatePage extends Component {
             </TouchableOpacity>))}
           </View>
 
-          <ScrollView>
-            <Text>{JSON.stringify(this.state)}</Text>
-          </ScrollView>
 
           <View style={[styles.row, { display: 'flex', justifyContent: 'center', marginVertical: 30 }]}>
-            <Button onPress={() => null} style={{ color: 'white', marginTop: 50 }} onPress={this.props.close} title={'Book appointement'} />
+            <Button onPress={() => null} style={{ color: 'white', marginTop: 50 }} title={'Book appointement'} />
           </View>
 
 

@@ -107,8 +107,8 @@ const sections = {
     { label: 'is_pregnant', name: 'is_pregnant', hidden: true, type: 'text' },
     { immutable: true, label: 'ref_id', name: 'ref_id', hidden: true, type: 'text' },
     { immutable: true, label: 'room_id', name: 'room_id', hidden: true, type: 'text' },
-    { immutable: true, label: 'doctor', value: (props, state) => (state.visit.getDr ? state.visit.getDr() : 'N/A'), type: 'text' },
-    { immutable: true, label: 'room', value: (props, state) => state.visit.room_id, type: 'text' },
+    { immutable: true, name: 'dr_name', label: 'doctor', value: (props, state, d) => (state.visit.getDr ? state.visit.getDr(d) : 'N/A'), type: 'text' },
+    { immutable: true, name: 'room_name', label: 'room', value: (props, state) => state.visit.room_id, type: 'text' },
     { label: 'services', name: 'services', type: 'array' },
     { label: 'husband', name: 'husband', type: 'text' },
     { label: 'husband age', name: 'husband_age', type: 'text' },
@@ -361,7 +361,7 @@ class CreatePage extends Component {
             <Text style={[{ flex: 1, fontSize: 20, color: 'white', textAlign: 'center' }]}>{i}</Text>
             <Text style={{ color: 'white' }}>{this.state.showSection === i ? 'close' : 'open'}</Text>
           </TouchableOpacity>
-            {this.state.showSection === i && (
+          {this.state.showSection === i && (
             <View>
               {sections[i].filter(ix => !ix.hidden)
                 .map(name => (<View key={i + name.name} style={[styles.row, { borderWidth: 1, borderColor: 'purple' }]}>
@@ -372,7 +372,7 @@ class CreatePage extends Component {
                     multiline={name.multiline}
                     editable={this.canEdit(name)}
                     style={[styles.label, { flex: 1, textAlign: 'center', padding: 10, color: name.immutable ? 'grey' : 'purple' }]}
-                    defaultValue={String(name.value ? name.value(this.props, this.state) : (this.state.visit.get(name.name) || ''))}
+                    defaultValue={String(name.value ? name.value(this.props, this.state, this.props.dispatch) : (this.state.visit.get(name.name) || ''))}
                     onChangeText={e => this.update(name.name, e)}
                   />
                 </View>))}
@@ -386,7 +386,7 @@ class CreatePage extends Component {
 
 
 const mapStateToProps = (store, props) => {
-  const visit = store.getIn(['visits', 'cards', String(props.id)]);
+  const visit = store.getIn(['visits', 'cards', String(props.id)]) || {};
   return {
     visit,
     role: selectAppUserRole(store),

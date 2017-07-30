@@ -2,24 +2,30 @@ import { Map, Record } from 'immutable';
 import { createSelector } from 'reselect';
 import { selectAppUserId, selectAppUserRole } from '../selectors';
 import { API_CALL_ACTION, APP_LOAD, APP_START, API_SUCCESS } from '../types';
+import { read } from '../tools';
 
 const key = 'rooms';
 
 /** SELECTORS**/
-const selectRooms = state => state.getIn(['rooms']);
-const roomsIadmin = createSelector(
+export const selectRooms = state => state.getIn(['rooms']);
+const roomsIcontrol = createSelector(
   selectRooms,
   selectAppUserId,
   selectAppUserRole,
   (rooms, id, role) => {
-    if (role === 'admin') return rooms.keySeq().toArray().sort();
+    if (role === 'admin') return rooms;
 
-    return rooms.filter(i => i.admins.map(String).indexOf(String(id)) > -1).keySeq().toArray().sort();
+    return read(
+      () => rooms.filter(i => Array.isArray(i.admins)).filter(
+        i => i.admins.map(String).indexOf(String(id)) > -1,
+      ),
+      Map({}),
+    );
   },
 );
 export const selectors = {
   selectRooms,
-  roomsIadmin,
+  roomsIcontrol,
 };
 
 
@@ -60,7 +66,10 @@ export const actions = {
 function roomFactory(data, state) {
   const raw = Object.values(data);
   return raw.reduce(
-    (carry, i) => carry.set(String(i.id), new RoomShape(i)),
+    (carry, i) => {
+      const n = carry.has(String(i.id)) ? carry.get(String(i.id)).merge(new RoomShape(i)) : new RoomShape(i);
+      return carry.set(`${i.id}`, n);
+    },
     (state && state.set) ? state : Map({}),
   );
 }

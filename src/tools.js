@@ -3,6 +3,16 @@ import { Map } from 'immutable';
 import { Linking, Alert } from 'react-native';
 
 const noob = f => f;
+
+export const read = (fn, def) => {
+  try {
+    return fn();
+  } catch (e) {
+    console.log('E:', e);
+    return def;
+  }
+};
+
 export const combineReducers = config => (state, action) => Object.entries(
   config).reduce((carry, reducer) => {
   const part = carry.get(reducer[0]);

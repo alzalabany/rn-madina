@@ -79,7 +79,7 @@ store = createStore(smartRootReducer, undefined, composed);
 passProps.logout = () => store.dispatch(
   appActions.authLogout(appSelectors.selectAppUserId(store.getState())),
 );
-const storageKey = '@MySuperStore:key';
+const storageKey = '@MySuperStore:keys';
 
 async function loadStore({ dispatch }) {
   let saved = await AsyncStorage.getItem(storageKey);
@@ -95,9 +95,8 @@ async function loadStore({ dispatch }) {
 registerScreens(store, Provider);
 
 export default class App {
-  constructor(appStyle, debuger) {
+  constructor(appStyle) {
     // since react-redux only works on components, we need to subscribe this class manually
-    this.debuger = debuger;
     this.currentRoot = null;
     this.debouncePersistence = 0;
     this.action = type => store.dispatch({ type });
@@ -151,48 +150,41 @@ export default class App {
     }
   }
   startApp(root, logout) {
-    if (root === 'login') {
-      if (logout === true) passProps.logout();
-      api.setHeader('Authorization', 'Bearer null');
-      Navigation.startSingleScreenApp({
-        animationType: 'slide-down',
-        screen: {
-          screen: 'ivf.AuthScreen',
-          title: 'Login',
-          navigatorStyle: { navBarHidden: true },
-        },
-        passProps,
-      });
-      return;
+    switch (root) {
+      case 'after-login':
+        const state = store.getState();
+        const token = appSelectors.selectAppUserToken(state);
+        if (!token || token.length < 10) passProps.logout();
+        api.setHeader('Authorization', `Bearer ${token}`);
+        store.dispatch(appActions.blog.download());
+        store.dispatch(appActions.visits.download());
+        store.dispatch(appActions.downloadConfig());
+        Navigation.startTabBasedApp({
+          title: 'Madina Icsi',
+          tabsStyle: {
+            tabBarBackgroundColor: 'purple',
+            tabBarButtonColor: '#ffffff',
+            tabBarSelectedButtonColor: 'white',
+            tabBarTranslucent: false,
+          },
+          tabs: this.tabs,
+        });
+        break;
+      case 'login':
+        if (logout === true) passProps.logout();
+        api.setHeader('Authorization', 'Bearer null');
+        Navigation.startSingleScreenApp({
+          animationType: 'slide-down',
+          screen: {
+            screen: 'ivf.AuthScreen',
+            title: 'Login',
+            navigatorStyle: { navBarHidden: true },
+          },
+          passProps,
+        });
+        break;
+      default:
+        console.warn(`unkown app root[${root}]`);
     }
-    if (root === 'after-login') {
-      const state = store.getState();
-      const id = appSelectors.selectAppUserId(state);
-      const token = appSelectors.selectAppUserToken(state);
-      api.setHeader('Authorization', `Bearer ${token}`);
-
-
-      // store.dispatch(appActions.blog.download());
-      // store.dispatch(appActions.visits.download());
-      store.dispatch(appActions.downloadConfig());
-      Navigation.startTabBasedApp({
-
-        title: 'Madina Icsi',
-        tabsStyle: {
-          tabBarBackgroundColor: 'purple',
-          tabBarButtonColor: '#ffffff',
-          tabBarSelectedButtonColor: 'white',
-          tabBarTranslucent: false,
-        },
-        tabs: this.tabs,
-      });
-      if (this.debuger && this.debuger.setUser) {
-        this.debuger.setUser(id, token);
-      }
-
-      return;
-    }
-
-    console.warn('unkown app root');
   }
 }

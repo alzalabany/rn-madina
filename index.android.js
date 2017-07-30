@@ -1,7 +1,5 @@
-import { Client } from 'bugsnag-react-native';
 import App from './src/index';
 
-const bugsnag = new Client();
 const navigatorStyle = {
   // Common
   navBarTextColor: '#FFF', // change the text color of the title (remembered across pushes)
@@ -38,4 +36,4 @@ const navigatorStyle = {
   // collapsingToolBarCollapsedColor: '#0f2362', // Collapsing Toolbar scrim color.
 };
 
-const app = new App(navigatorStyle, bugsnag);
+const app = new App(navigatorStyle);

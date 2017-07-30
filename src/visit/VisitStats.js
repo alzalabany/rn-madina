@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: 'hidden',
     marginRight: 10,
-    minWidth: 50,
+    minWidth: 80,
     flexDirection: 'column',
     justifyContent: 'center',
   },
@@ -42,11 +42,12 @@ const styles = StyleSheet.create({
   },
 });
 
-const VisitRow = ({ data, total }) => {
+const VisitRow = ({ data, total, busyCount }) => {
   let cards = Array.isArray(data) ? data.concat() : [];
-  if (total) {
-    cards = [cards[0], { color: 'purple', title: 'Perc', data: `${Math.floor((data.length / total) * 100)}%` }].concat(cards.slice(1, cards.length)).filter(Boolean);
+  if (total && busyCount) {
+    cards = [cards[0], { color: 'purple', title: 'Perc', data: `${Math.floor((busyCount / total) * 100)}%` }].concat(cards.slice(1, cards.length)).filter(Boolean);
   }
+  console.log('Statistis ', data);
   return (
     <ScrollView horizontal style={styles.container}>
       {cards.map(item => (<View style={styles.card} key={item.color + item.title}>

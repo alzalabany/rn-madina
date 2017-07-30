@@ -3,7 +3,7 @@ package com.ivf;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.bugsnag.BugsnagReactNative;
+import com.BV.LinearGradient.LinearGradientPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.xxsnakerxx.socialauth.SocialAuthPackage;
 import com.geektime.rnonesignalandroid.ReactNativeOneSignalPackage;
@@ -29,7 +29,7 @@ public class MainApplication extends NavigationApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            BugsnagReactNative.getPackage(),
+            new LinearGradientPackage(),
             new VectorIconsPackage(),
             new SocialAuthPackage(),
             new ReactNativeOneSignalPackage(),
